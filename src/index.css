@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+@import url('https://db.onlinewebfonts.com/c/e66905e07608167a84e6ad52f638c3c6?family=Helvetica+Now+Var');
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #000000;
+  overflow: hidden;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.9s ease-out both;
+}
+
+.font-mono-jb {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-helv {
+  font-family: 'Helvetica Now Var', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* Staggered word fade-up (Framer Motion whileInView equivalent):
+   opacity 0 / y 32px -> opacity 1 / y 0, ease [0.22, 1, 0.36, 1], 0.7s.
+   Delay is set inline per word: 0.15s + 0.08s * index. */
+@keyframes fade-up-word {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  opacity: 0;
+  animation: fade-up-word 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
