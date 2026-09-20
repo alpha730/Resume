@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import NetworkHero from './NetworkHero';
-import CardCarousel from './CardCarousel';
+import SpaceField from './SpaceField';
 
 export default function App() {
-  const [scene, setScene] = useState<'hero' | 'cards'>('hero');
+  const [scene, setScene] = useState<'hero' | 'system'>('hero');
 
   return (
     <div className="absolute inset-0 bg-[#000000] overflow-hidden">
       {scene === 'hero' ? (
-        <NetworkHero onOpen={() => setScene('cards')} />
+        <NetworkHero onOpen={() => setScene('system')} />
       ) : (
-        <CardCarousel onExit={() => setScene('hero')} />
+        <SpaceField onExit={() => setScene('hero')} />
       )}
     </div>
   );
