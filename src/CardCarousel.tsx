@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import NebulaBackground from './NebulaBackground';
 
 const CDN = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P';
 const local = (name: string) => `${import.meta.env.BASE_URL}assets/videos/${name}`;
@@ -474,11 +475,14 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       className="absolute inset-0 bg-[#000000] text-white flex items-center justify-center overflow-hidden select-none animate-fade-in cursor-pointer"
       onClick={toggleFocus}
     >
+      <NebulaBackground />
+
       {/* 3D perspective camera space */}
       <div
         className="relative w-full h-full flex items-center justify-center pointer-events-none"
         style={{
           perspective: '1350px',
+          zIndex: 1,
         }}
       >
         {/* Dynamic 3D coordinate viewport */}
