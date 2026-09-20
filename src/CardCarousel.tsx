@@ -20,7 +20,7 @@ interface Section {
   title: string;
   subtitle: string;
   lines: string[]; // short teaser on the card back
-  detail: DetailBlock[]; // full resume content shown when the card is zoomed
+  detail: DetailBlock[]; // full resume content shown in the detail panel
 }
 
 // ARYAN KUMAR — resume content
@@ -28,19 +28,16 @@ const SECTIONS: Section[] = [
   {
     id: '01',
     title: 'ABOUT',
-    subtitle: 'aryan kumar',
+    subtitle: 'ARYAN KUMAR',
     lines: ['Aspiring AI & Data Science dev', 'B.Tech AI & DS (JECRC, Jaipur)', 'ML apps · AI tools · dashboards'],
     detail: [
       {
         heading: 'ARYAN KUMAR',
         lines: [
-          'Aspiring AI and Data Science developer currently pursuing a',
-          'B.Tech in Artificial Intelligence & Data Science.',
-          'Passionate about building machine learning applications and',
-          'AI-powered tools. Experienced in developing web applications,',
-          'machine learning models, and interactive dashboards using',
-          'modern technologies. Currently building real-world AI and',
-          'machine learning projects.',
+          'Aspiring AI and Data Science developer currently pursuing a B.Tech in Artificial Intelligence & Data Science. ',
+          'Passionate about building machine learning applications, AI-powered tools, and agentic AI systems.',
+          'Experienced in developing web applications, machine learning models, RAG-based solutions, and interactive dashboards using modern technologies. ',
+          'Currently focused on building real-world AI applications and intelligent agentic systems.',
         ],
       },
       {
@@ -52,41 +49,29 @@ const SECTIONS: Section[] = [
   {
     id: '02',
     title: 'EDUCATION',
-    subtitle: 'where i studied',
+    subtitle: 'WHERE I STUDIED',
     lines: ['B.Tech — AI & Data Science', 'JECRC Foundation · 2025–2029', "ISC — St. Xavier's · 2024"],
     detail: [
       {
         heading: 'B.TECH — ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
-        lines: [
-          'Jaipur Engineering College and Research Centre Foundation,',
-          'Jaipur | 2025 – 2029',
-        ],
+        lines: ['Jaipur Engineering College and Research Centre Foundation, Jaipur', '2025 – 2029'],
       },
       {
         heading: 'ISC (CLASS XII)',
-        lines: ["St. Xavier's School | 2024"],
+        lines: ["St. Xavier's School", '2024'],
       },
     ],
   },
   {
     id: '03',
     title: 'SKILLS',
-    subtitle: 'what i use',
+    subtitle: 'WHAT I USE',
     lines: ['Python · Java · React.js · Node.js', 'Machine Learning · Prompt Eng.', 'Git · Vercel · Render · N8N'],
     detail: [
       { heading: 'PROGRAMMING', lines: ['Python, Java'] },
-      {
-        heading: 'WEB DEVELOPMENT (VIBE CODING)',
-        lines: ['HTML, CSS, React.js, Node.js'],
-      },
-      {
-        heading: 'AI / MACHINE LEARNING',
-        lines: ['Machine Learning, Prompt Engineering'],
-      },
-      {
-        heading: 'TOOLS & PLATFORMS',
-        lines: ['Git, GitHub, Vercel, Render, N8N'],
-      },
+      { heading: 'WEB DEVELOPMENT (VIBE CODING)', lines: ['HTML, CSS, React.js, Node.js'] },
+      { heading: 'AI / MACHINE LEARNING', lines: ['Machine Learning, Prompt Engineering'] },
+      { heading: 'TOOLS & PLATFORMS', lines: ['Git, GitHub, Vercel, Render, N8N'] },
     ],
   },
   {
@@ -98,28 +83,24 @@ const SECTIONS: Section[] = [
       {
         heading: 'AI CHATBOT FOR OCEAN DATA',
         lines: [
-          'AI-powered chatbot that retrieves Argo float oceanographic',
-          'data using vector search and semantic retrieval.',
-          'Stack: Node.js, Pinecone, Gemini AI, PostgreSQL',
+          'AI-powered chatbot that retrieves Argo float oceanographic data using vector search and semantic retrieval.',
+          'Tech stack: Node.js, Pinecone, Gemini AI, PostgreSQL',
         ],
       },
       {
         heading: 'CRICKET FIRST-INNINGS SCORE PREDICTOR',
         lines: [
-          'ML web app predicting final first-innings T20 scores from',
-          'live match conditions through an interactive dashboard.',
-          'Stack: Python, Scikit-learn, FastAPI, NumPy, Pandas',
+          'Machine learning web application that predicts the final first-innings score in T20 matches using live match conditions through an interactive dashboard.',
+          'Tech stack: Python, Scikit-learn, FastAPI, NumPy, Pandas, HTML, CSS, JavaScript',
         ],
-        link: { label: 'cricket-score-predictor-rho.vercel.app', href: 'https://cricket-score-predictor-rho.vercel.app' },
       },
       {
         heading: 'FEEDBACK SYSTEM DASHBOARD',
         lines: [
-          'React dashboard visualizing agreement between AI model',
-          'outputs via an interactive slider and dynamic progress bar.',
-          'Stack: React.js, Vite, JavaScript, HTML, CSS',
+          'React-based dashboard that visualizes the agreement level between AI model outputs using an interactive slider and dynamic progress bar.',
+          'Tech stack: React.js, Vite, JavaScript, HTML, CSS',
         ],
-        link: { label: 'jtechtrix-feedback.vercel.app', href: 'https://jtechtrix-feedback.vercel.app' },
+
       },
     ],
   },
@@ -132,15 +113,13 @@ const SECTIONS: Section[] = [
       {
         heading: 'AI ENGINEER — AI SERVICE COMPANY',
         lines: [
-          'Worked on an application bringing interior designing to a',
-          'new perspective — from the real world to the virtual world.',
+          'Worked on an application bringing interior designing to a new perspective — from the real world to the virtual world.',
         ],
       },
       {
         heading: 'SOCIAL MEDIA — AASHAYIEN CLUB (JECRC FOUNDATION)',
         lines: [
-          'Prominent member of the social media team, in the role of',
-          'content writer with content strategy and planning.',
+          'Prominent member of the social media team, in the role of content writer with content strategy and planning.',
         ],
       },
     ],
@@ -158,18 +137,18 @@ const SECTIONS: Section[] = [
       {
         heading: 'LINKEDIN',
         lines: [],
-        link: { label: 'linkedin.com/in/aryan-kumar-851730313', href: 'https://linkedin.com/in/aryan-kumar-851730313' },
+        link: { label: 'Linkedin', href: 'https://www.linkedin.com/in/aryan-kumar-jecrc/' },
       },
       {
         heading: 'GITHUB',
         lines: [],
-        link: { label: 'github.com/alpha730', href: 'https://github.com/alpha730' },
+        link: { label: 'Github', href: 'https://github.com/alpha730' },
       },
     ],
   },
 ];
 
-const FOCUS_Z = 950; // translateZ of a card zoomed in for detail view
+const FOCUS_Z = 620; // translateZ of the selected card (zoomed, moved aside)
 
 interface CardCarouselProps {
   onExit: () => void;
@@ -184,11 +163,13 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
   const progress = useRef<number>(0);
   const scrollVelocity = useRef<number>(0);
 
-  // Focus (zoom-in detail) state: ref drives the render loop,
-  // state drives the detail overlay visibility
+  // Focus (select + zoom aside) state: ref drives the render loop,
+  // state drives the detail panel visibility
   const focusAnim = useRef({ target: 0, t: 0, idx: 0 });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const focusedRef = useRef<number | null>(null);
+  // Keeps the last section rendered in the panel during the exit slide
+  const lastFocused = useRef<number>(0);
 
   // Track mouse coordinates for interactive 3D parallax tilt with inertia damping
   const mouse = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
@@ -205,6 +186,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
     if (idx === null) {
       focusAnim.current.target = 0;
     } else {
+      lastFocused.current = idx;
       focusAnim.current.idx = idx;
       focusAnim.current.target = 1;
     }
@@ -214,7 +196,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
     if (focusedRef.current !== null) {
       setFocus(null);
     } else {
-      // Focus whichever card is currently at the front center
+      // Select whichever card is currently at the front center
       const idx = ((Math.round(progress.current) % cardCount) + cardCount) % cardCount;
       setFocus(idx);
     }
@@ -233,7 +215,8 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       mouse.current.targetY = 0;
     };
 
-    // Wheel scrubs through the deck with momentum (ignored while focused)
+    // Wheel scrubs through the deck with momentum (ignored while focused,
+    // so the wheel scrolls the detail panel instead)
     const handleWheel = (e: WheelEvent) => {
       if (focusedRef.current !== null) return;
       scrollVelocity.current += e.deltaY * 0.00012;
@@ -302,6 +285,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
     mouse.current.y += (mouse.current.targetY - mouse.current.y) * 0.08;
 
     const cards = cardsRefs.current;
+    const w = window.innerWidth;
     const h = window.innerHeight;
     const { cardH } = metrics;
 
@@ -326,7 +310,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       const absOffset = Math.abs(offset);
       const sign = Math.sign(offset);
 
-      if (absOffset > 3.0) {
+      if (absOffset > 3.0 && !(ft > 0 && i === F.idx)) {
         card.style.visibility = 'hidden';
         continue;
       } else {
@@ -337,6 +321,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       const peekAmount = -55;
       const D = 1350; // Perspective distance
 
+      let x = 0;
       let y = 0;
       let z = 0;
       let rot = 0;
@@ -407,24 +392,31 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       let rotZ = -3;
       let opacity = 1;
 
-      // ---- focus blend: the chosen card zooms in flat and straight,
-      //      everything else dims behind it ----
+      // ---- focus blend: the selected card zooms in and glides to the
+      //      side (top on mobile), staying face-up exactly as it looks in
+      //      the deck; everything else dims behind the detail panel ----
       if (ft > 0) {
         if (i === F.idx) {
-          y = y * (1 - ft);
+          const isDesktop = w >= 1024;
+          const sF = D / (D - FOCUS_Z); // perspective scale at focus depth
+          const xTarget = isDesktop ? (-w * 0.235) / sF : 0;
+          const yTarget = isDesktop ? 0 : -(h * 0.26) / sF;
+
+          x = xTarget * ft;
+          y = y * (1 - ft) + yTarget * ft;
           z = z + (FOCUS_Z - z) * ft;
           totalRotX = totalRotX * (1 - ft);
           totalRotY = totalRotY * (1 - ft);
           rotZ = -3 * (1 - ft);
         } else {
-          opacity = 1 - ft * 0.75;
+          opacity = 1 - ft * 0.8;
         }
       }
 
       card.style.zIndex = Math.round(z).toString();
       card.style.opacity = opacity.toFixed(3);
 
-      card.style.transform = `translateY(${y.toFixed(2)}px) translateZ(${z.toFixed(2)}px) rotateX(${totalRotX.toFixed(2)}deg) rotateY(${totalRotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg)`;
+      card.style.transform = `translateX(${x.toFixed(2)}px) translateY(${y.toFixed(2)}px) translateZ(${z.toFixed(2)}px) rotateX(${totalRotX.toFixed(2)}deg) rotateY(${totalRotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg)`;
     }
   };
 
@@ -441,6 +433,9 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
 
   // Slices for 3D volumetric depth
   const thicknessLayers = [-1.47, -0.73, 0, 0.73, 1.47];
+
+  const open = focusedIndex !== null;
+  const panelSection = SECTIONS[focusedIndex ?? lastFocused.current];
 
   return (
     <div
@@ -501,7 +496,6 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
 
                 // Front face slice
                 if (isFrontFace) {
-                  const isFocused = focusedIndex === i;
                   return (
                     <div
                       key={layerIdx}
@@ -522,12 +516,7 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
                         className="absolute inset-0 w-full h-full object-cover rounded-[16px]"
                       />
 
-                      {/* Standard face content — fades away while focused */}
-                      <div
-                        className={`absolute inset-0 p-5 sm:p-6 text-white h-full w-full font-sans z-10 bg-black/15 transition-opacity duration-300 ${
-                          isFocused ? 'opacity-0' : 'opacity-100'
-                        }`}
-                      >
+                      <div className="absolute inset-0 p-5 sm:p-6 text-white h-full w-full font-sans z-10 bg-black/15">
                         {/* Silver metallic contact chip - mid-left */}
                         <div className="absolute left-5 sm:left-6 top-1/2 -translate-y-1/2">
                           <svg
@@ -577,53 +566,6 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
                         <div className="absolute right-5 sm:right-6 bottom-5 sm:bottom-6 flex -space-x-3 items-center opacity-90">
                           <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 backdrop-blur-[1px] border border-white/10" />
                           <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/35 backdrop-blur-[1px] border border-white/10" />
-                        </div>
-                      </div>
-
-                      {/* Detail overlay — revealed while the card is zoomed in.
-                          Small fonts read perfectly at ~3x perspective scale. */}
-                      <div
-                        className={`absolute inset-0 z-20 p-4 sm:p-5 bg-black/70 backdrop-blur-[2px] font-mono-jb overflow-hidden transition-opacity duration-300 ${
-                          isFocused ? 'opacity-100 pointer-events-auto' : 'opacity-0'
-                        }`}
-                      >
-                        <div className="flex items-baseline justify-between mb-2">
-                          <div className="text-[9px] sm:text-[11px] font-bold tracking-[0.2em] text-white">
-                            {section.title}
-                          </div>
-                          <div className="text-[5px] sm:text-[6px] tracking-[0.2em] text-white/50 uppercase">
-                            click to close
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-1.5 sm:gap-2">
-                          {section.detail.map((block, bi) => (
-                            <div key={bi}>
-                              {block.heading && (
-                                <div className="text-[6px] sm:text-[7.5px] font-bold tracking-[0.12em] text-amber-200/90">
-                                  {block.heading}
-                                </div>
-                              )}
-                              {block.lines.map((line, li) => (
-                                <div
-                                  key={li}
-                                  className="text-[5.5px] sm:text-[7px] leading-[1.5] text-white/80"
-                                >
-                                  {line}
-                                </div>
-                              ))}
-                              {block.link && (
-                                <a
-                                  href={block.link.href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-[5.5px] sm:text-[7px] leading-[1.5] text-amber-300 underline underline-offset-1 hover:text-amber-200"
-                                >
-                                  {block.link.label}
-                                </a>
-                              )}
-                            </div>
-                          ))}
                         </div>
                       </div>
                     </div>
@@ -686,6 +628,71 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
         </div>
       </div>
 
+      {/* ============ DETAIL PANEL: slides in like a page ============
+          Desktop: from the right, beside the card. Mobile: from the bottom,
+          under the card. Scrollable when content overflows. */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`fixed z-40 bg-[#0a0a0c]/90 backdrop-blur-xl border-white/10 cursor-default
+          bottom-0 left-0 right-0 h-[58%] border-t rounded-t-2xl
+          lg:top-0 lg:bottom-0 lg:left-auto lg:right-0 lg:h-full lg:w-[46%] lg:border-t-0 lg:border-l lg:rounded-none
+          transition-transform duration-700
+          ${open ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-y-0 lg:translate-x-full'}`}
+        style={{ transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
+      >
+        <div key={focusedIndex ?? 'closed'} className="h-full overflow-y-auto px-7 sm:px-10 py-8 lg:py-14">
+          {/* Panel header */}
+          <div className="animate-fade-up" style={{ animationDelay: '0.15s' }}>
+            <div className="font-mono-jb text-[10px] tracking-[0.3em] text-amber-300/80 uppercase">
+              {panelSection.id} / 0{SECTIONS.length}
+            </div>
+            <div className="font-helv text-[26px] sm:text-[34px] font-bold tracking-tight text-white uppercase mt-1">
+              {panelSection.title}
+            </div>
+            <div className="font-mono-jb text-[11px] text-white/50 tracking-[0.18em] mt-1">
+              {panelSection.subtitle}
+            </div>
+            <div className="h-px bg-white/10 mt-5" />
+          </div>
+
+          {/* Detail blocks, staggered fade-up like a page loading */}
+          <div className="mt-6 flex flex-col gap-6">
+            {panelSection.detail.map((block, bi) => (
+              <div key={bi} className="animate-fade-up" style={{ animationDelay: `${0.3 + bi * 0.12}s` }}>
+                {block.heading && (
+                  <div className="font-mono-jb text-[11px] sm:text-[12px] font-bold tracking-[0.16em] text-amber-200/90">
+                    {block.heading}
+                  </div>
+                )}
+                {block.lines.map((line, li) => (
+                  <p key={li} className="font-mono-jb text-[12px] sm:text-[13px] leading-relaxed text-white/75 mt-2">
+                    {line}
+                  </p>
+                ))}
+                {block.link && (
+                  <a
+                    href={block.link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block font-mono-jb text-[12px] sm:text-[13px] mt-2 text-amber-300 underline underline-offset-2 hover:text-amber-200"
+                  >
+                    {block.link.label} ↗
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Close */}
+          <button
+            onClick={() => setFocus(null)}
+            className="mt-10 font-mono-jb text-[10px] tracking-[0.24em] text-white/50 hover:text-white transition-colors uppercase border border-white/15 hover:border-white/40 rounded-md px-3 py-1.5 cursor-pointer"
+          >
+            ← close
+          </button>
+        </div>
+      </div>
+
       {/* Exit back to the hero */}
       <button
         onClick={(e) => {
@@ -698,8 +705,8 @@ export default function CardCarousel({ onExit }: CardCarouselProps) {
       </button>
 
       {/* Hint */}
-      <div className="absolute bottom-6 inset-x-0 text-center font-mono-jb text-[10px] tracking-[0.3em] text-white/25 uppercase pointer-events-none">
-        {focusedIndex !== null ? 'click anywhere to zoom out' : 'scroll to browse · click to open a card'}
+      <div className="absolute bottom-6 inset-x-0 text-center font-mono-jb text-[10px] tracking-[0.3em] text-white/25 uppercase pointer-events-none z-30">
+        {open ? '' : 'scroll to browse · click to open a card'}
       </div>
     </div>
   );
