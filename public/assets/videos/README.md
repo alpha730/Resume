@@ -3,17 +3,20 @@
 One looping video per carousel card. Drop a file in here with the exact
 name below and it is picked up automatically — no code change needed.
 
-| File                        | Card            |
-| --------------------------- | --------------- |
-| card-01-about.mp4           | ABOUT           |
-| card-02-education.mp4       | EDUCATION       |
-| card-03-skills.mp4          | SKILLS          |
-| card-04-projects.mp4        | PROJECTS        |
-| card-05-certifications.mp4  | CERTIFICATIONS  |
-| card-06-experience.mp4      | EXPERIENCE      |
-| card-07-contact.mp4         | CONTACT         |
+Current mapping (see `CARD_VIDEOS` in `src/CardCarousel.tsx`):
 
-A card with no file falls back to a plain dark face.
+| Card            | Source                |
+| --------------- | --------------------- |
+| ABOUT           | hosted clip           |
+| EDUCATION       | `EDUCATION.mp4`       |
+| SKILLS          | `SKILLS.mp4`          |
+| PROJECTS        | hosted clip           |
+| CERTIFICATIONS  | hosted clip           |
+| EXPERIENCE      | hosted clip           |
+| CONTACT         | `conact.mp4`          |
+
+To move a card onto a local file, add the file here and swap its entry
+in `CARD_VIDEOS` to `local('<filename>.mp4')`.
 
 ## Specs
 

@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 
-// Card face loops, one per section, served from public/assets/videos/.
-// Drop a file in with the matching name to swap a card's background —
-// no code change needed. BASE_URL keeps the path correct on GitHub Pages.
+const CDN = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P';
+const local = (name: string) => `${import.meta.env.BASE_URL}assets/videos/${name}`;
+
+// Card face loops, one per section. Local files live in public/assets/videos/
+// and resolve through BASE_URL so the paths stay correct on GitHub Pages;
+// the remaining cards still use the original hosted clips.
 const CARD_VIDEOS = [
-  'card-01-about.mp4',
-  'card-02-education.mp4',
-  'card-03-skills.mp4',
-  'card-04-projects.mp4',
-  'card-05-certifications.mp4',
-  'card-06-experience.mp4',
-  'card-07-contact.mp4',
-].map((name) => `${import.meta.env.BASE_URL}assets/videos/${name}`);
+  `${CDN}/hf_20260506_030111_a9e15665-d379-4a7f-8116-695bbe452ad1.mp4`, // 01 about
+  local('EDUCATION.mp4'), //                                              02 education
+  local('SKILLS.mp4'), //                                                 03 skills
+  `${CDN}/hf_20260423_161253_c72b1869-400f-45ed-ac0c-52f68c2ed5bd.mp4`, // 04 projects
+  `${CDN}/hf_20260324_024928_1efd0b0d-6c02-45a8-8847-1030900c4f63.mp4`, // 05 certifications
+  `${CDN}/hf_20260418_115655_b4d9cd77-feed-43cd-a198-af78ebdf1f7a.mp4`, // 06 experience
+  local('conact.mp4'), //                                                 07 contact
+];
 
 interface DetailBlock {
   heading?: string;
