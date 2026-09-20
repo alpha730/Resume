@@ -39,7 +39,7 @@ interface Placement {
 // bodies off each other, and leave the centre readable.
 const PLACEMENTS: Placement[] = [
   { kind: 'gasGiant', x: 19, y: 30, size: 168, depth: 1.0, speed: 0.10, phase: 0.0, spin: 0, mobile: { x: 30, y: 24 } },
-  { kind: 'ringedPlanet', x: 55, y: 15, size: 138, depth: 0.65, speed: 0.13, phase: 1.7, spin: 0, mobile: { x: 64, y: 11 } },
+  { kind: 'marsPlanet', x: 55, y: 15, size: 138, depth: 0.65, speed: 0.13, phase: 1.7, spin: 0, mobile: { x: 64, y: 11 } },
   { kind: 'crateredMoon', x: 81, y: 39, size: 116, depth: 1.15, speed: 0.16, phase: 3.1, spin: 1.5, mobile: { x: 74, y: 38 } },
   { kind: 'asteroidCluster', x: 34, y: 66, size: 146, depth: 0.8, speed: 0.11, phase: 4.6, spin: -4, mobile: { x: 36, y: 62 } },
   { kind: 'comet', x: 12, y: 71, size: 122, depth: 1.3, speed: 0.19, phase: 2.3, spin: 0, mobile: { x: 34, y: 82 } },

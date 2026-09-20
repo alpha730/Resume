@@ -12,7 +12,7 @@ import { renderPlanet, renderAsteroid, prng, type PlanetOptions } from './spaceR
 
 export type BodyKind =
   | 'gasGiant'
-  | 'ringedPlanet'
+  | 'marsPlanet'
   | 'crateredMoon'
   | 'asteroidCluster'
   | 'comet'
@@ -37,14 +37,10 @@ function buildBody(kind: BodyKind, size: number, seed: number): HTMLCanvasElemen
     case 'gasGiant':
       return planet({ type: 'gas', seed, fill: 0.84, atmosphere: [70, 44, 20] });
 
-    case 'ringedPlanet':
-      return planet({
-        type: 'neptunian',
-        seed,
-        fill: 0.80,
-        atmosphere: [42, 78, 150],
-        ring: { inner: 1.36, outer: 2.2, tilt: -0.34, color: [214, 206, 188], opacity: 0.5 },
-      });
+    case 'marsPlanet':
+      // fill 0.78 keeps the globe the same diameter it had inside the old ring
+      // canvas, so dropping the ring does not shrink the body.
+      return planet({ type: 'martian', seed, fill: 0.78, atmosphere: [128, 74, 44], ambient: 0.035 });
 
     case 'crateredMoon':
       return planet({ type: 'rocky', seed, fill: 0.84, ambient: 0.02 });
@@ -203,21 +199,6 @@ export default function CelestialBody({ kind, uid, size }: Props) {
   }
 
   if (!painted) return null;
-
-  if (kind === 'ringedPlanet') {
-    // withRing pads the canvas to 1.9x to fit the ring, so the image is drawn
-    // oversized and centred; otherwise this globe would read far smaller than
-    // its neighbours. The button keeps the nominal size as its hit area.
-    const box = size * 1.85;
-    return (
-      <div style={{ width: size, height: size, position: 'relative' }}>
-        <div
-          ref={mount(painted, box)}
-          style={{ position: 'absolute', left: (size - box) / 2, top: (size - box) / 2 }}
-        />
-      </div>
-    );
-  }
 
   return <div ref={mount(painted, size)} style={{ width: size, height: size }} />;
 }

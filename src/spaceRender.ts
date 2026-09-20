@@ -93,7 +93,7 @@ const LX = LIGHT[0] / LIGHT_LEN;
 const LY = LIGHT[1] / LIGHT_LEN;
 const LZ = LIGHT[2] / LIGHT_LEN;
 
-export type PlanetType = 'gas' | 'ice' | 'rocky' | 'terran' | 'neptunian';
+export type PlanetType = 'gas' | 'ice' | 'rocky' | 'terran' | 'neptunian' | 'martian';
 
 export interface PlanetOptions {
   type: PlanetType;
@@ -141,6 +141,15 @@ const PALETTES: Record<PlanetType, [number, RGB][]> = {
     [0.82, [140, 122, 82]],
     [1.0, [206, 198, 184]],
   ],
+  // Mars: iron oxide. Dark basalt lowlands through rust to pale dust.
+  martian: [
+    [0.0, [78, 40, 28]],
+    [0.22, [116, 56, 34]],
+    [0.45, [158, 80, 44]],
+    [0.66, [192, 108, 62]],
+    [0.84, [214, 146, 96]],
+    [1.0, [232, 186, 144]],
+  ],
   // Neptune: deep blue with lighter banding.
   neptunian: [
     [0.0, [16, 38, 96]],
@@ -178,13 +187,14 @@ export function renderPlanet(size: number, opts: PlanetOptions): HTMLCanvasEleme
 
   // Craters live in spherical coordinates so they stay round near the limb.
   const craters: { lon: number; lat: number; r: number; depth: number }[] = [];
-  if (opts.type === 'rocky') {
-    for (let i = 0; i < 46; i++) {
+  if (opts.type === 'rocky' || opts.type === 'martian') {
+    const isMoon = opts.type === 'rocky';
+    for (let i = 0; i < (isMoon ? 46 : 22); i++) {
       craters.push({
         lon: rand() * Math.PI * 2,
         lat: Math.asin(rand() * 2 - 1),
-        r: 0.05 + Math.pow(rand(), 2.4) * 0.30,
-        depth: 0.35 + rand() * 0.65,
+        r: 0.05 + Math.pow(rand(), 2.4) * (isMoon ? 0.30 : 0.2),
+        depth: (isMoon ? 0.35 : 0.18) + rand() * (isMoon ? 0.65 : 0.34),
       });
     }
   }
@@ -215,6 +225,31 @@ export function renderPlanet(size: number, opts: PlanetOptions): HTMLCanvasEleme
         const d = detail(lon * 4, lat * 4);
         return Math.min(1, Math.max(0, c * 0.78 + d * 0.22));
       }
+      case 'martian': {
+        // Big albedo provinces — the dark patches that are visible from Earth
+        // — over finer dust and ridges.
+        const province = fbm(lon * 1.15, lat * 1.15);
+        const dust = detail(lon * 4.5, lat * 4.5);
+        let v = province * 0.62 + dust * 0.38;
+        // A ridged component reads as canyon and scarp rather than rolling hills.
+        v += (1 - Math.abs(detail(lon * 2.6 + 9, lat * 2.6) - 0.5) * 2) * 0.1;
+        // Stretch around the midpoint: fbm clusters near 0.5, which left the
+        // whole globe one flat orange instead of dark basalt against pale dust.
+        v = (v - 0.52) * 1.75 + 0.5;
+        for (const c of craters) {
+          if (Math.abs(lat - c.lat) > c.r) continue;
+          const dl = Math.abs(lon - c.lon);
+          const dLon = Math.min(dl, Math.PI * 2 - dl);
+          const d = Math.hypot(dLon * Math.cos((lat + c.lat) / 2), lat - c.lat);
+          if (d < c.r) {
+            const t = d / c.r;
+            const rim = Math.exp(-Math.pow((t - 0.82) / 0.16, 2)) * 0.4;
+            const floor = -(1 - Math.pow(t / 0.82, 2)) * c.depth * 0.34;
+            v += (t < 0.82 ? floor : 0) + rim * c.depth;
+          }
+        }
+        return Math.min(1, Math.max(0, v));
+      }
       case 'rocky': {
         let v = fbm(lon * 2.2, lat * 2.2) * 0.72 + detail(lon * 7, lat * 7) * 0.28;
         for (const c of craters) {
@@ -240,7 +275,7 @@ export function renderPlanet(size: number, opts: PlanetOptions): HTMLCanvasEleme
   const palette = PALETTES[opts.type];
   // Finite-difference step for the normal; too small and it turns to noise.
   const eps = 0.012;
-  const bump = opts.type === 'rocky' ? 2.6 : opts.type === 'gas' ? 0.55 : 0.8;
+  const bump = opts.type === 'rocky' ? 2.6 : opts.type === 'martian' ? 1.7 : opts.type === 'gas' ? 0.55 : 0.8;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -274,6 +309,17 @@ export function renderPlanet(size: number, opts: PlanetOptions): HTMLCanvasEleme
       const limb = Math.pow(nz, 0.42);
 
       let [r, g, b] = ramp(palette, hC);
+
+      // Polar caps: CO2 frost, with a ragged edge rather than a drawn circle.
+      if (opts.type === 'martian') {
+        const edge = 1.16 + (detail(lon * 3.4, lat * 3.4) - 0.5) * 0.34;
+        const cap = (Math.abs(lat) - edge * 0.58) / 0.34;
+        if (cap > 0) {
+          [r, g, b] = mix([r, g, b], [238, 235, 230], Math.min(1, cap) * 0.95);
+        }
+        // Thin haze of suspended dust over everything.
+        [r, g, b] = mix([r, g, b], [206, 150, 110], 0.1);
+      }
 
       // Terran worlds get a cloud deck over the surface, not baked into it.
       if (opts.type === 'terran') {
