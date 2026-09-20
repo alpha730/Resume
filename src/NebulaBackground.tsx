@@ -206,6 +206,97 @@ function drawGalaxy(
 }
 
 /**
+ * A black hole: shadow, photon ring, and an accretion disc lensed over the
+ * top and under the bottom.
+ *
+ * The disc is drawn three times — the flat ellipse the disc actually is, plus
+ * a steeply-curved arc above and below it, which is how gravity bends the far
+ * side of the disc into view around the shadow. Without those arcs it reads
+ * as a ringed planet, not a black hole.
+ */
+function drawBlackHole(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  rot: number,
+  tilt: number,
+  seed: number,
+) {
+  const rand = prng(seed);
+  const shadowR = r * 0.21;
+  const inner = r * 0.30;
+  const outer = r;
+  const bands = 70;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+
+  // Outer glow — hot gas lighting the dust around it.
+  ctx.globalCompositeOperation = 'lighter';
+  const glow = ctx.createRadialGradient(0, 0, shadowR, 0, 0, r * 1.5);
+  glow.addColorStop(0, 'rgba(255, 176, 92, 0.16)');
+  glow.addColorStop(0.45, 'rgba(255, 120, 40, 0.05)');
+  glow.addColorStop(1, 'rgba(120, 40, 10, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  /** One pass of concentric disc bands. */
+  const disc = (ry: number, from: number, to: number, gain: number) => {
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const rad = inner + (outer - inner) * t;
+      // Hot and white at the inner edge, cooling outward.
+      const cr = 255;
+      const cg = Math.round(240 - t * 176);
+      const cb = Math.round(212 - t * 214);
+      // Turbulence, plus Doppler beaming: the approaching side is brighter.
+      const flicker = 0.5 + rand() * 0.5;
+      // Bright at the inner edge and thinning fast — a disc, not a solid ring.
+      const alpha = Math.pow(1 - t, 1.5) * flicker * gain * 0.42;
+      ctx.strokeStyle = `rgba(${cr}, ${cg}, ${Math.max(0, cb)}, ${alpha.toFixed(3)})`;
+      ctx.lineWidth = Math.max(0.6, ((outer - inner) / bands) * 1.35);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rad, rad * ry, 0, from, to);
+      ctx.stroke();
+    }
+  };
+
+  // Far side of the disc, lensed up over the shadow.
+  disc(0.46, Math.PI, Math.PI * 2, 0.95);
+  // The disc's own plane, behind the hole.
+  disc(tilt, Math.PI, Math.PI * 2, 0.85);
+
+  // Event horizon: genuinely black, and it must occlude what is behind it.
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(0, 0, shadowR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Photon ring hugging the shadow.
+  ctx.globalCompositeOperation = 'lighter';
+  const ring = ctx.createRadialGradient(0, 0, shadowR * 0.96, 0, 0, shadowR * 1.22);
+  ring.addColorStop(0, 'rgba(255, 230, 180, 0)');
+  ring.addColorStop(0.35, 'rgba(255, 244, 214, 0.85)');
+  ring.addColorStop(1, 'rgba(255, 170, 70, 0)');
+  ctx.fillStyle = ring;
+  ctx.beginPath();
+  ctx.arc(0, 0, shadowR * 1.22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Near side of the disc, in front of the shadow, and its lensed underside.
+  disc(tilt, 0, Math.PI, 1.0);
+  disc(0.46, 0, Math.PI, 0.40);
+
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/**
  * A distant world, rendered per-pixel and stamped into the layer.
  *
  * Small distant planets share the same renderer as the interactive bodies so
@@ -369,7 +460,7 @@ export default function NebulaBackground() {
       steps.push(() => {
         far = makeLayer((c) => {
         drawGalaxy(c, w * 0.80, h * 0.09, s * 0.17, -0.5, 0.42, '#b9a6ff', 4211);
-        drawGalaxy(c, w * 0.06, h * 0.52, s * 0.20, 0.35, 0.62, '#ffc79a', 991);
+        drawBlackHole(c, w * 0.06, h * 0.52, s * 0.155, 0.32, 0.17, 991);
         drawGalaxy(c, w * 0.44, h * 0.90, s * 0.09, 1.1, 0.30, '#9fd8ff', 7717);
 
         drawPlanet(c, w * 0.95, h * 0.18, s * 0.062, 'gas', 8841, { ring: true });
