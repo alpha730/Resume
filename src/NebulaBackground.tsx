@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { renderPlanet, renderAsteroid, renderGrain, type PlanetType } from './spaceRender';
 
 /**
  * A cluttered deep-field, drawn procedurally — no photograph, no video.
@@ -204,80 +205,37 @@ function drawGalaxy(
   ctx.restore();
 }
 
-/** A distant world: lit limb, terminator falling away, optional ring. */
+/**
+ * A distant world, rendered per-pixel and stamped into the layer.
+ *
+ * Small distant planets share the same renderer as the interactive bodies so
+ * the whole scene is lit from one direction and shaded the same way.
+ */
 function drawPlanet(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   r: number,
-  hi: string,
-  lo: string,
-  opts: { ring?: boolean; ringTilt?: number; glow?: string } = {},
+  type: PlanetType,
+  seed: number,
+  opts: { ring?: boolean; atmosphere?: [number, number, number] } = {},
 ) {
-  ctx.save();
-  ctx.translate(x, y);
-
-  if (opts.glow) {
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(0, 0, r * 0.9, 0, 0, r * 1.7);
-    g.addColorStop(0, opts.glow);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 1.7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-  }
-
-  // Back half of the ring, then the body, then the front half.
-  if (opts.ring) {
-    ctx.save();
-    ctx.rotate(opts.ringTilt ?? -0.4);
-    ctx.strokeStyle = 'rgba(210,190,160,0.30)';
-    ctx.lineWidth = r * 0.16;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 2.0, r * 0.52, 0, Math.PI, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  const body = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.05, 0, 0, r);
-  body.addColorStop(0, hi);
-  body.addColorStop(0.55, lo);
-  body.addColorStop(1, '#05070c');
-  ctx.fillStyle = body;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (opts.ring) {
-    ctx.save();
-    ctx.rotate(opts.ringTilt ?? -0.4);
-    ctx.strokeStyle = 'rgba(225,205,175,0.42)';
-    ctx.lineWidth = r * 0.16;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 2.0, r * 0.52, 0, 0, Math.PI);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.strokeStyle = 'rgba(255,225,190,0.30)';
-  ctx.lineWidth = Math.max(0.6, r * 0.045);
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.98, Math.PI * 0.72, Math.PI * 1.72);
-  ctx.stroke();
-
-  ctx.restore();
+  const want = Math.round(r * (opts.ring ? 4.6 : 2.6));
+  const box = Math.max(24, Math.min(420, want));
+  const c = renderPlanet(box, {
+    type,
+    seed,
+    fill: opts.ring ? 0.42 : 0.78,
+    atmosphere: opts.atmosphere,
+    ring: opts.ring
+      ? { inner: 1.34, outer: 2.1, tilt: -0.36, color: [206, 196, 176], opacity: 0.42 }
+      : undefined,
+  });
+  const draw = Math.max(want, box);
+  ctx.drawImage(c, x - draw / 2, y - draw / 2, draw, draw);
 }
 
-/**
- * Irregular shaded rock, lit from the upper left like everything else here.
- *
- * Detail scales with radius: gravel gets a plain silhouette, while a
- * foreground boulder gets a curved outline, many craters and a rim light,
- * because at that size a flat polygon reads as a paper cut-out.
- */
+/** Lumpy shaded rock, stamped from the same renderer as the asteroid cluster. */
 function drawRock(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -286,81 +244,39 @@ function drawRock(
   seed: number,
   opts: { dark?: boolean } = {},
 ) {
-  const rand = prng(seed);
-  const points = Math.round(Math.min(22, Math.max(8, 8 + r / 14)));
-  const radii: number[] = [];
-  for (let i = 0; i < points; i++) radii.push(r * (0.66 + rand() * 0.44));
-
+  const want = Math.round(r * 2.4);
+  const box = Math.max(8, Math.min(220, want));
+  const c = renderAsteroid(box, {
+    seed,
+    ambient: opts.dark ? 0.008 : 0.035,
+    // Foreground rock is upscaled from a small texture, so it is drawn as a
+    // dark silhouette with a lit shoulder rather than a detailed surface —
+    // blurry darkness reads as depth, blurry midtone reads as a smudge.
+    albedo: opts.dark ? 0.28 : 1,
+  });
+  const draw = Math.max(want, box);
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(rand() * Math.PI * 2);
-
-  // Curved outline through vertex midpoints — organic, never faceted.
-  const px = (i: number) => Math.cos((i / points) * Math.PI * 2) * radii[i % points];
-  const py = (i: number) => Math.sin((i / points) * Math.PI * 2) * radii[i % points];
-  ctx.beginPath();
-  ctx.moveTo((px(0) + px(1)) / 2, (py(0) + py(1)) / 2);
-  for (let i = 1; i <= points; i++) {
-    const mx = (px(i) + px(i + 1)) / 2;
-    const my = (py(i) + py(i + 1)) / 2;
-    ctx.quadraticCurveTo(px(i), py(i), mx, my);
-  }
-  ctx.closePath();
-
-  const shade = ctx.createRadialGradient(-r * 0.4, -r * 0.45, r * 0.05, 0, 0, r * 1.15);
-  if (opts.dark) {
-    // Foreground rock is mostly in shadow; only its lit shoulder catches light.
-    shade.addColorStop(0, '#85786a');
-    shade.addColorStop(0.35, '#443b31');
-    shade.addColorStop(1, '#0c0a09');
-  } else {
-    shade.addColorStop(0, '#9c8d7c');
-    shade.addColorStop(0.45, '#5d5246');
-    shade.addColorStop(1, '#171310');
-  }
-  ctx.fillStyle = shade;
-  ctx.fill();
-
-  if (r > 7) {
-    ctx.save();
-    ctx.clip();
-
-    const craters = opts.dark ? 10 + Math.floor(rand() * 10) : 2 + Math.floor(rand() * 3);
-    for (let i = 0; i < craters; i++) {
-      const cr = r * (0.06 + rand() * (opts.dark ? 0.16 : 0.2));
-      const ccx = (rand() - 0.5) * r * 1.5;
-      const ccy = (rand() - 0.5) * r * 1.5;
-      ctx.fillStyle = opts.dark ? 'rgba(10,8,7,0.6)' : 'rgba(28,22,18,0.55)';
-      ctx.beginPath();
-      ctx.arc(ccx, ccy, cr, 0, Math.PI * 2);
-      ctx.fill();
-      // Lit inner wall on the side facing the light.
-      ctx.fillStyle = opts.dark ? 'rgba(150,134,112,0.18)' : 'rgba(180,165,145,0.22)';
-      ctx.beginPath();
-      ctx.arc(ccx - cr * 0.28, ccy - cr * 0.28, cr * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Terminator: a soft shadow sweeping the unlit side.
-    if (opts.dark) {
-      const term = ctx.createLinearGradient(-r, -r, r, r);
-      term.addColorStop(0, 'rgba(0,0,0,0)');
-      term.addColorStop(0.45, 'rgba(0,0,0,0.25)');
-      term.addColorStop(1, 'rgba(0,0,0,0.8)');
-      ctx.fillStyle = term;
-      ctx.fillRect(-r * 1.6, -r * 1.6, r * 3.2, r * 3.2);
-    }
-    ctx.restore();
-  }
-
-  if (opts.dark) {
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.strokeStyle = 'rgba(255,215,170,0.24)';
-    ctx.lineWidth = Math.max(1, r * 0.012);
-    ctx.stroke();
-  }
-
+  // Deterministic rotation so a belt does not look like one rock repeated.
+  ctx.rotate((seed % 360) * (Math.PI / 180));
+  ctx.drawImage(c, -draw / 2, -draw / 2, draw, draw);
   ctx.restore();
+}
+
+/**
+ * Pre-rendered rubble sprites, built once and reused across every belt.
+ *
+ * Rendering each pebble per-pixel cost seconds at load for no visible gain —
+ * at belt scale they are a handful of pixels across.
+ */
+let rockSprites: HTMLCanvasElement[] | null = null;
+function getRockSprites() {
+  if (!rockSprites) {
+    rockSprites = Array.from({ length: 16 }, (_, i) =>
+      renderAsteroid(72, { seed: 91103 + i * 7717, ambient: 0.03 }),
+    );
+  }
+  return rockSprites;
 }
 
 /** A stream of rubble along a quadratic arc. */
@@ -387,7 +303,13 @@ function drawBelt(
     const perp = (rand() - 0.5) * spread * 0.6;
     // Biased small: a belt is mostly gravel with a few real rocks in it.
     const size = maxR * (0.12 + Math.pow(rand(), 2.2) * 0.9);
-    drawRock(ctx, bx + off, by + perp, size, seed + i * 977);
+    const sprites = getRockSprites();
+    const sprite = sprites[Math.floor(rand() * sprites.length)];
+    ctx.save();
+    ctx.translate(bx + off, by + perp);
+    ctx.rotate(rand() * Math.PI * 2);
+    ctx.drawImage(sprite, -size, -size, size * 2, size * 2);
+    ctx.restore();
   }
 }
 
@@ -412,6 +334,8 @@ export default function NebulaBackground() {
     let stars: Star[] = [];
     let w = 0;
     let h = 0;
+    const grain = renderGrain(256, 4242);
+    const grainPattern = ctx.createPattern(grain, 'repeat');
     let far: HTMLCanvasElement | null = null;
     let mid: HTMLCanvasElement | null = null;
     let near: HTMLCanvasElement | null = null;
@@ -431,46 +355,65 @@ export default function NebulaBackground() {
     // Composition follows a deep-field photograph: galaxies and worlds pushed
     // to the edges, rubble streaming diagonally, boulders closing the corners.
     // The middle stays open so the interactive bodies keep their space.
+    let decorToken = 0;
+
     const buildDecor = () => {
+      const token = ++decorToken;
       const s = Math.min(w, h);
       // Rubble is sized in absolute pixels, so without this a phone gets
       // boulders where a desktop gets gravel.
       const k = Math.min(1.15, Math.max(0.42, s / 900));
 
-      far = makeLayer((c) => {
+      const steps: (() => void)[] = [];
+
+      steps.push(() => {
+        far = makeLayer((c) => {
         drawGalaxy(c, w * 0.80, h * 0.09, s * 0.17, -0.5, 0.42, '#b9a6ff', 4211);
         drawGalaxy(c, w * 0.06, h * 0.52, s * 0.20, 0.35, 0.62, '#ffc79a', 991);
         drawGalaxy(c, w * 0.44, h * 0.90, s * 0.09, 1.1, 0.30, '#9fd8ff', 7717);
 
-        drawPlanet(c, w * 0.965, h * 0.17, s * 0.075, '#3a3f52', '#14161f', { ring: true, ringTilt: -0.35 });
-        drawPlanet(c, w * 0.235, h * 0.45, s * 0.022, '#c98d63', '#5a3520');
-        drawPlanet(c, w * 0.61, h * 0.23, s * 0.030, '#b9b1a2', '#4a453c');
-        drawPlanet(c, w * 0.905, h * 0.60, s * 0.018, '#8fa6c4', '#2c3546');
-        drawPlanet(c, w * 0.035, h * 0.93, s * 0.085, '#6f86a8', '#1b2333', {
-          glow: 'rgba(120,170,230,0.18)',
-        });
-        drawPlanet(c, w * 0.30, h * 0.92, s * 0.020, '#a89a88', '#3d362e');
+        drawPlanet(c, w * 0.95, h * 0.18, s * 0.062, 'gas', 8841, { ring: true });
+        drawPlanet(c, w * 0.235, h * 0.45, s * 0.022, 'rocky', 3301);
+        drawPlanet(c, w * 0.61, h * 0.23, s * 0.030, 'rocky', 5507);
+        drawPlanet(c, w * 0.905, h * 0.60, s * 0.018, 'neptunian', 6173, { atmosphere: [40, 74, 140] });
+        drawPlanet(c, w * 0.035, h * 0.93, s * 0.082, 'terran', 9091, { atmosphere: [46, 104, 190] });
+        drawPlanet(c, w * 0.30, h * 0.92, s * 0.020, 'rocky', 7727);
 
-        // Thin, distant rubble — small and low contrast, so it stays far away.
-        drawBelt(c, w * 0.52, -h * 0.02, w * 0.78, h * 0.3, w * 1.02, h * 0.62, 150, 26 * k, 5 * k, 313);
+          // Thin, distant rubble — small and low contrast, so it stays far away.
+          drawBelt(c, w * 0.52, -h * 0.02, w * 0.78, h * 0.3, w * 1.02, h * 0.62, 150, 26 * k, 5 * k, 313);
+        });
       });
 
-      mid = makeLayer((c) => {
+      steps.push(() => {
+        mid = makeLayer((c) => {
         drawBelt(c, w * 0.46, -h * 0.05, w * 0.80, h * 0.34, w * 0.86, h * 1.05, 210, 40 * k, 11 * k, 5150);
         drawBelt(c, w * 1.02, h * 0.34, w * 0.72, h * 0.52, w * 0.36, h * 0.82, 90, 34 * k, 8 * k, 8123);
         drawRock(c, w * 0.40, h * 0.54, s * 0.022, 6011);
         drawRock(c, w * 0.53, h * 0.72, s * 0.016, 6421);
-        drawRock(c, w * 0.88, h * 0.46, s * 0.020, 6733);
+          drawRock(c, w * 0.88, h * 0.46, s * 0.020, 6733);
+        });
       });
 
-      near = makeLayer((c) => {
+      steps.push(() => {
+        near = makeLayer((c) => {
         // Anchored off-canvas so they read as very close to the camera.
         drawRock(c, w * 1.04, h * 1.02, s * 0.46, 1777, { dark: true });
         drawRock(c, w * 0.86, h * 1.18, s * 0.22, 1801, { dark: true });
         drawRock(c, -w * 0.06, h * 1.10, s * 0.22, 2299, { dark: true });
         drawRock(c, w * 0.17, h * 1.20, s * 0.16, 2411, { dark: true });
-        drawRock(c, -w * 0.03, h * -0.04, s * 0.13, 2833, { dark: true });
+          drawRock(c, -w * 0.03, h * -0.04, s * 0.13, 2833, { dark: true });
+        });
       });
+
+      // One layer per task, so a resize can abandon the rest and no single
+      // task blocks the frame loop for long.
+      let i = 0;
+      const step = () => {
+        if (token !== decorToken || i >= steps.length) return;
+        steps[i++]();
+        setTimeout(step, 0);
+      };
+      setTimeout(step, 0);
     };
 
     const resize = () => {
@@ -620,6 +563,16 @@ export default function NebulaBackground() {
       vignette.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, w, h);
+
+      // Grain last: a clean render is the giveaway that nothing was shot.
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = 0.5;
+      if (grainPattern) {
+        ctx.fillStyle = grainPattern;
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
 
       frame = requestAnimationFrame(render);
     };

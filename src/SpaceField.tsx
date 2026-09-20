@@ -43,7 +43,7 @@ const PLACEMENTS: Placement[] = [
   { kind: 'crateredMoon', x: 81, y: 39, size: 116, depth: 1.15, speed: 0.16, phase: 3.1, spin: 1.5, mobile: { x: 74, y: 38 } },
   { kind: 'asteroidCluster', x: 34, y: 66, size: 146, depth: 0.8, speed: 0.11, phase: 4.6, spin: -4, mobile: { x: 36, y: 62 } },
   { kind: 'comet', x: 12, y: 71, size: 122, depth: 1.3, speed: 0.19, phase: 2.3, spin: 0, mobile: { x: 34, y: 82 } },
-  { kind: 'icePlanet', x: 67, y: 74, size: 130, depth: 0.55, speed: 0.12, phase: 5.4, spin: 0, mobile: { x: 72, y: 72 } },
+  { kind: 'terranPlanet', x: 67, y: 74, size: 130, depth: 0.55, speed: 0.12, phase: 5.4, spin: 0, mobile: { x: 72, y: 72 } },
   { kind: 'station', x: 46, y: 41, size: 96, depth: 1.45, speed: 0.22, phase: 0.9, spin: 6, mobile: { x: 30, y: 45 } },
 ];
 
