@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { renderGalaxy } from './spaceRender';
 
 const ZOOM_DURATION = 1500; // ms from click to arriving inside the galaxy
@@ -48,6 +48,8 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const zoomStart = useRef<number | null>(null);
   const openFired = useRef(false);
+  // Drives the hint text only; the canvas reads hover from its own loop.
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -68,6 +70,28 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
     let galaxyTex: HTMLCanvasElement | null = null;
     let galaxyBorn = 0;
     let frameId = 0;
+
+    // ---- hover state ----
+    const mouse = { x: -9999, y: -9999 };
+    let hoverT = 0; // eased 0 → 1 while the cursor is over the disc
+    let hoverOn = false;
+    let spin = 0; // accumulated so hovering can speed it up without a jump
+    let lastNow = 0;
+    // Scratch canvas for the cursor highlight: the galaxy masked to a soft
+    // spot, so only stars and arms under the cursor light up, not empty space.
+    let spot: HTMLCanvasElement | null = null;
+    let spotCtx: CanvasRenderingContext2D | null = null;
+
+    const onMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    const onMouseLeave = () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseleave', onMouseLeave);
 
     // ---- faint background: distant galaxies and star dust, baked once ----
     const renderSky = () => {
@@ -165,6 +189,10 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
     const galaxyTimer = window.setTimeout(() => {
       galaxyTex = renderGalaxy(820, 424242);
       galaxyBorn = performance.now();
+      spot = document.createElement('canvas');
+      spot.width = galaxyTex.width;
+      spot.height = galaxyTex.height;
+      spotCtx = spot.getContext('2d');
     }, 30);
 
     // Ease-in-cubic: the dive starts gently and accelerates into the core.
@@ -176,6 +204,8 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
         zoomT = Math.min(1, (now - zoomStart.current) / ZOOM_DURATION);
       }
       const scale = 1 + easeInCubic(zoomT) * 14;
+      const dt = lastNow ? Math.min(64, now - lastNow) : 16;
+      lastNow = now;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = '#02020a';
@@ -281,25 +311,82 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
         // vertically. Portrait phones have height to spare, so it can run
         // nearly edge to edge there.
         const D = Math.min(width * (width < 640 ? 1.05 : 0.66), height * 1.75);
+        const PA = -0.38; // position angle on the sky
+        const INC = 0.44; // inclination (minor/major axis ratio)
+
+        // Hit-test against the tilted disc, not the screen: undo the position
+        // angle and the inclination, then compare against the disc radius.
+        const dx = mouse.x - cx;
+        const dy = mouse.y - cy;
+        const lx = dx * Math.cos(-PA) - dy * Math.sin(-PA);
+        const ly = (dx * Math.sin(-PA) + dy * Math.cos(-PA)) / INC;
+        const rNorm = Math.hypot(lx, ly) / (D / 2);
+        const over = zoomT === 0 && fadeIn > 0.5 && rNorm < 0.8;
+        if (over !== hoverOn) {
+          hoverOn = over;
+          setHovered(over);
+        }
+        hoverT += ((over ? 1 : 0) - hoverT) * 0.08;
+
+        // Hovering quickens the spin; accumulating avoids a jump in angle.
+        spin += dt * 0.000018 * (1 + hoverT * 5);
+
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = fadeIn;
         ctx.translate(cx, cy);
-        ctx.rotate(-0.38); // position angle on the sky
-        ctx.scale(1, 0.44); // inclination
-        ctx.rotate(now * 0.000018); // spin in its own plane
+        ctx.rotate(PA);
+        ctx.scale(1, INC);
+        ctx.rotate(spin); // spin in its own plane
         ctx.drawImage(galaxyTex, -D / 2, -D / 2, D, D);
+
+        if (hoverT > 0.01) {
+          // Whole disc lifts a little…
+          ctx.globalAlpha = fadeIn * hoverT * 0.4;
+          ctx.drawImage(galaxyTex, -D / 2, -D / 2, D, D);
+
+          // …and the region under the cursor lights up. The cursor is taken
+          // into the disc's own spinning frame, then the galaxy is masked to a
+          // soft spot there and added back on top.
+          if (spot && spotCtx) {
+            const sx = lx * Math.cos(spin) + ly * Math.sin(spin);
+            const sy = -lx * Math.sin(spin) + ly * Math.cos(spin);
+            const T = spot.width;
+            const tx = ((sx + D / 2) / D) * T;
+            const ty = ((sy + D / 2) / D) * T;
+            spotCtx.globalCompositeOperation = 'source-over';
+            spotCtx.clearRect(0, 0, T, T);
+            // Stacked additively: the outer disc is faint, and brightening a
+            // faint region once barely registers.
+            spotCtx.drawImage(galaxyTex, 0, 0);
+            spotCtx.globalCompositeOperation = 'lighter';
+            spotCtx.drawImage(galaxyTex, 0, 0);
+            spotCtx.drawImage(galaxyTex, 0, 0);
+            spotCtx.globalCompositeOperation = 'destination-in';
+            const g = spotCtx.createRadialGradient(tx, ty, 0, tx, ty, T * 0.2);
+            g.addColorStop(0, 'rgba(0,0,0,1)');
+            g.addColorStop(0.45, 'rgba(0,0,0,0.5)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            spotCtx.fillStyle = g;
+            spotCtx.fillRect(0, 0, T, T);
+            // globalAlpha caps at 1, so a stronger highlight needs a second pass.
+            ctx.globalAlpha = fadeIn * hoverT;
+            ctx.drawImage(spot, -D / 2, -D / 2, D, D);
+            ctx.drawImage(spot, -D / 2, -D / 2, D, D);
+          }
+        }
         ctx.restore();
 
-        // Soft core bloom — the bulge overexposes, as it does in photographs.
+        // Soft core bloom — the bulge overexposes, as it does in photographs,
+        // and swells when the galaxy is hovered.
         const pulse = 1 + Math.sin(now * 0.0012) * 0.06;
-        const bloomR = D * 0.09 * pulse;
+        const bloomR = D * 0.09 * pulse * (1 + hoverT * 0.45);
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = fadeIn;
         const bloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, bloomR);
-        bloom.addColorStop(0, 'rgba(255, 246, 226, 0.55)');
-        bloom.addColorStop(0.4, 'rgba(255, 214, 160, 0.16)');
+        bloom.addColorStop(0, `rgba(255, 246, 226, ${(0.55 + hoverT * 0.3).toFixed(3)})`);
+        bloom.addColorStop(0.4, `rgba(255, 214, 160, ${(0.16 + hoverT * 0.12).toFixed(3)})`);
         bloom.addColorStop(1, 'rgba(255, 190, 120, 0)');
         ctx.fillStyle = bloom;
         ctx.beginPath();
@@ -340,6 +427,8 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
       cancelAnimationFrame(frameId);
       window.clearTimeout(galaxyTimer);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseleave', onMouseLeave);
     };
   }, [onOpen]);
 
@@ -356,8 +445,11 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
         className="fixed top-0 left-0 w-full h-screen cursor-pointer"
         style={{ zIndex: 0 }}
       />
-      <div className="absolute bottom-8 inset-x-0 text-center font-mono-jb text-[10px] tracking-[0.3em] text-white/30 uppercase pointer-events-none z-10">
-        click the galaxy to enter
+      <div
+        className={`absolute bottom-8 inset-x-0 text-center font-mono-jb text-[10px] uppercase pointer-events-none z-10
+          transition-all duration-500 ${hovered ? 'text-amber-200/90 tracking-[0.42em]' : 'text-white/30 tracking-[0.3em]'}`}
+      >
+        {hovered ? 'click to enter the galaxy' : 'click the galaxy to enter'}
       </div>
     </div>
   );
