@@ -3,6 +3,23 @@ import { renderGalaxy } from './spaceRender';
 
 const ZOOM_DURATION = 1500; // ms from click to arriving inside the galaxy
 
+/**
+ * Background galaxies — decoration only, they just turn.
+ *
+ * Positions are fractions of the viewport, kept to the corners and edges so
+ * they never crowd the main galaxy. Size is a fraction of the short side.
+ * Varying inclination is what makes them read as different galaxies: near
+ * face-on shows the spiral, near edge-on collapses to a streak.
+ */
+const BG_GALAXIES = [
+  { x: 0.11, y: 0.19, size: 0.30, pa: 0.6, inc: 0.55, pitch: 0.36, spin: 0.000034, alpha: 0.8, seed: 1101 },
+  { x: 0.88, y: 0.16, size: 0.24, pa: -1.1, inc: 0.3, pitch: 0.5, spin: -0.000046, alpha: 0.75, seed: 2203 },
+  { x: 0.90, y: 0.80, size: 0.34, pa: 0.3, inc: 0.72, pitch: 0.48, spin: 0.000026, alpha: 0.8, seed: 3307 },
+  { x: 0.12, y: 0.83, size: 0.22, pa: -0.4, inc: 0.24, pitch: 0.4, spin: -0.00004, alpha: 0.7, seed: 4409 },
+  { x: 0.50, y: 0.08, size: 0.13, pa: 1.2, inc: 0.62, pitch: 0.44, spin: 0.00006, alpha: 0.65, seed: 5501 },
+  { x: 0.66, y: 0.93, size: 0.15, pa: -0.9, inc: 0.45, pitch: 0.34, spin: -0.000052, alpha: 0.65, seed: 6607 },
+];
+
 interface Star {
   x: number;
   y: number;
@@ -80,6 +97,9 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
     // Scratch canvas for the cursor highlight: the galaxy masked to a soft
     // spot, so only stars and arms under the cursor light up, not empty space.
     let spot: HTMLCanvasElement | null = null;
+    const bgTex: (HTMLCanvasElement | null)[] = BG_GALAXIES.map(() => null);
+    const bgBorn: number[] = BG_GALAXIES.map(() => 0);
+    const bgTimers: number[] = [];
     let spotCtx: CanvasRenderingContext2D | null = null;
 
     const onMouseMove = (e: MouseEvent) => {
@@ -193,6 +213,17 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
       spot.width = galaxyTex.width;
       spot.height = galaxyTex.height;
       spotCtx = spot.getContext('2d');
+
+      // Background galaxies follow one per task, so no single task blocks
+      // the frame loop for long.
+      BG_GALAXIES.forEach((g, i) => {
+        bgTimers.push(
+          window.setTimeout(() => {
+            bgTex[i] = renderGalaxy(300, g.seed, g.pitch);
+            bgBorn[i] = performance.now();
+          }, 60 * (i + 1)),
+        );
+      });
     }, 30);
 
     // Ease-in-cubic: the dive starts gently and accelerates into the core.
@@ -298,6 +329,24 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
         ctx.moveTo(m.x, m.y);
         ctx.lineTo(tailX, tailY);
         ctx.stroke();
+      }
+
+      // ---- background galaxies: turning slowly, each at its own rate ----
+      const short = Math.min(width, height);
+      for (let i = 0; i < BG_GALAXIES.length; i++) {
+        const tex = bgTex[i];
+        if (!tex) continue;
+        const g = BG_GALAXIES[i];
+        const D = short * g.size;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = g.alpha * Math.min(1, (now - bgBorn[i]) / 1400);
+        ctx.translate(width * g.x, height * g.y);
+        ctx.rotate(g.pa);
+        ctx.scale(1, g.inc);
+        ctx.rotate(now * g.spin);
+        ctx.drawImage(tex, -D / 2, -D / 2, D, D);
+        ctx.restore();
       }
 
       // ---- the galaxy: everything from here zooms on click ----
@@ -426,6 +475,7 @@ export default function GalaxyHero({ onOpen }: GalaxyHeroProps) {
     return () => {
       cancelAnimationFrame(frameId);
       window.clearTimeout(galaxyTimer);
+      bgTimers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseleave', onMouseLeave);

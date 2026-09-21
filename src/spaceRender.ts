@@ -835,7 +835,11 @@ export function renderSatellite(size: number, seed: number): HTMLCanvasElement {
  * The result has a transparent background and is meant to be composited
  * with 'lighter' over a dark sky.
  */
-export function renderGalaxy(size: number, seed: number): HTMLCanvasElement {
+/**
+ * @param tanPitch tangent of the arm pitch angle — lower winds the arms
+ *   tighter. 0.42 (~23°) is about one turn from bulge to rim.
+ */
+export function renderGalaxy(size: number, seed: number, tanPitch = 0.42): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -847,9 +851,8 @@ export function renderGalaxy(size: number, seed: number): HTMLCanvasElement {
   const clump = makeFbm(seed + 101, 5, 64);
   const dustNoise = makeFbm(seed + 202, 4, 64);
 
-  // Log spiral r = a·e^(θ·tanφ)  →  θ(r) = ln(r/a) / tanφ. φ ≈ 23°: about one
-  // turn from bulge to rim. Tighter than this reads as concentric rings.
-  const tanPitch = 0.42;
+  // Log spiral r = a·e^(θ·tanφ)  →  θ(r) = ln(r/a) / tanφ. Much tighter than
+  // the default reads as concentric rings rather than arms.
   const a0 = 0.05;
   const armAngle = (r: number) => Math.log(Math.max(r, 0.001) / a0) / tanPitch;
 
