@@ -821,3 +821,158 @@ export function renderSatellite(size: number, seed: number): HTMLCanvasElement {
 
   return canvas;
 }
+
+/**
+ * A face-on spiral galaxy, to be tilted and rotated by the caller.
+ *
+ * Built the way photographs of spirals actually look:
+ *   - a warm, old-star bulge that saturates to white at the centre
+ *   - two log-spiral arms of young blue-white stars, broken up by noise
+ *   - dark dust lanes hugging the inner (trailing) edge of each arm
+ *   - pink HII knots — star-forming regions — strung along the arms
+ *   - thousands of resolved stars scattered through the disc
+ *
+ * The result has a transparent background and is meant to be composited
+ * with 'lighter' over a dark sky.
+ */
+export function renderGalaxy(size: number, seed: number): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(size, size);
+  const data = img.data;
+
+  const warpNoise = makeFbm(seed, 4, 32);
+  const clump = makeFbm(seed + 101, 5, 64);
+  const dustNoise = makeFbm(seed + 202, 4, 64);
+
+  // Log spiral r = a·e^(θ·tanφ)  →  θ(r) = ln(r/a) / tanφ. φ ≈ 23°: about one
+  // turn from bulge to rim. Tighter than this reads as concentric rings.
+  const tanPitch = 0.42;
+  const a0 = 0.05;
+  const armAngle = (r: number) => Math.log(Math.max(r, 0.001) / a0) / tanPitch;
+
+  /** Signed angular distance wrapped to [-π, π]. */
+  const wrap = (d: number) => {
+    d = (d + Math.PI) % (Math.PI * 2);
+    if (d < 0) d += Math.PI * 2;
+    return d - Math.PI;
+  };
+
+  const smooth = (e0: number, e1: number, x: number) => {
+    const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const nx = (x + 0.5) / size * 2 - 1;
+      const ny = (y + 0.5) / size * 2 - 1;
+      const r = Math.hypot(nx, ny);
+      if (r >= 1) continue;
+      const theta = Math.atan2(ny, nx);
+
+      const u = nx * 0.5 + 0.5;
+      const v = ny * 0.5 + 0.5;
+      // Noise warps the arms so they wander rather than trace a perfect curve.
+      const warp = (warpNoise(u * 3, v * 3) - 0.5) * 1.4;
+      const base = armAngle(r) + warp;
+
+      let arm = 0;
+      let dust = 0;
+      for (let k = 0; k < 2; k++) {
+        const d = wrap(theta - base - k * Math.PI);
+        // Arms widen slightly toward the rim, as real ones do.
+        const w = 0.36 + r * 0.22;
+        arm += Math.exp(-(d / w) * (d / w));
+        // Dust sits just inside each arm, on the trailing side.
+        const dd = (d + 0.26) / 0.1;
+        dust += Math.exp(-dd * dd);
+        // Weaker spurs between the main arms fill the disc out.
+        const ds = wrap(theta - base - k * Math.PI - Math.PI / 2);
+        arm += Math.exp(-(ds / (w * 1.4)) * (ds / (w * 1.4))) * 0.22;
+      }
+
+      const disc = Math.exp(-r / 0.26) * smooth(1.0, 0.82, r);
+      const armGate = smooth(0.05, 0.2, r);
+      const knots = 0.55 + clump(u * 9, v * 9) * 0.9;
+      const armLight = arm * disc * armGate * knots * 1.15;
+      const diffuse = disc * 0.3;
+      const bulge = Math.exp(-(r / 0.075) * (r / 0.075)) * 1.6 + Math.exp(-(r / 0.19) * (r / 0.19)) * 0.42;
+
+      const dustAmt = Math.min(1, dust * smooth(0.08, 0.24, r) * (0.45 + dustNoise(u * 7, v * 7) * 0.8));
+      const extinction = 1 - dustAmt * 0.78;
+
+      const L = (armLight + diffuse) * extinction + bulge;
+      if (L < 0.004) continue;
+
+      // Colour by population: warm bulge, blue-white arms, neutral between.
+      const wB = bulge / (L + 1e-6);
+      const wA = (armLight * extinction) / (L + 1e-6);
+      const wD = 1 - Math.min(1, wB + wA);
+      let cr = 255 * wB + 168 * wA + 214 * wD;
+      let cg = 222 * wB + 192 * wA + 200 * wD;
+      let cb = 172 * wB + 255 * wA + 188 * wD;
+      // Dust reddens what it does not block.
+      cr = cr * (1 - dustAmt * 0.1) + 40 * dustAmt;
+      cg *= 1 - dustAmt * 0.22;
+      cb *= 1 - dustAmt * 0.38;
+
+      const i = (y * size + x) * 4;
+      data[i] = Math.min(255, cr);
+      data[i + 1] = Math.min(255, cg);
+      data[i + 2] = Math.min(255, cb);
+      data[i + 3] = Math.min(255, L * 255);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // ---- particle pass: resolved stars and star-forming knots ----
+  const rand = prng(seed + 7);
+  const gauss = () => {
+    const a = Math.max(1e-6, rand());
+    return Math.sqrt(-2 * Math.log(a)) * Math.cos(Math.PI * 2 * rand());
+  };
+  const half = size / 2;
+  ctx.globalCompositeOperation = 'lighter';
+
+  const starCount = Math.round(size * size * 0.018);
+  for (let i = 0; i < starCount; i++) {
+    // Exponential radial distribution, biased onto the arms.
+    const r = Math.min(0.97, -Math.log(Math.max(1e-6, rand())) * 0.24);
+    if (r < 0.04) continue;
+    const onArm = rand() < 0.72;
+    const k = rand() < 0.5 ? 0 : Math.PI;
+    const theta = onArm ? armAngle(r) + k + gauss() * 0.34 : rand() * Math.PI * 2;
+    const px = half + Math.cos(theta) * r * half;
+    const py = half + Math.sin(theta) * r * half;
+    const bright = Math.pow(rand(), 3);
+    const blue = onArm && rand() < 0.7;
+    ctx.fillStyle = blue
+      ? `rgba(190, 212, 255, ${(0.25 + bright * 0.7).toFixed(3)})`
+      : `rgba(255, 236, 210, ${(0.2 + bright * 0.6).toFixed(3)})`;
+    const s = 0.5 + bright * 1.3;
+    ctx.fillRect(px - s / 2, py - s / 2, s, s);
+  }
+
+  for (let i = 0; i < 95; i++) {
+    const r = 0.2 + rand() * 0.66;
+    const k = rand() < 0.5 ? 0 : Math.PI;
+    // Near the leading side of the dust, where the gas is compressed — but
+    // scattered, since a perfect dotted line reads as drawn.
+    const theta = armAngle(r) + k - 0.06 + gauss() * 0.3;
+    const px = half + Math.cos(theta) * r * half;
+    const py = half + Math.sin(theta) * r * half;
+    const rad = size * (0.0018 + Math.pow(rand(), 2) * 0.008);
+    const g = ctx.createRadialGradient(px, py, 0, px, py, rad);
+    g.addColorStop(0, `rgba(255, 150, 185, ${(0.25 + rand() * 0.35).toFixed(3)})`);
+    g.addColorStop(1, 'rgba(255, 100, 150, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(px, py, rad, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  return canvas;
+}

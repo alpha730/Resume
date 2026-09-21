@@ -309,7 +309,7 @@ export default function SpaceField({ onExit }: SpaceFieldProps) {
         }}
         className="absolute top-5 left-5 z-50 font-mono-jb text-[10px] tracking-[0.24em] text-white/50 hover:text-white transition-colors uppercase border border-white/15 hover:border-white/40 rounded-md px-3 py-1.5 bg-black/40 backdrop-blur-sm cursor-pointer"
       >
-        ← esc / back to network
+        ← esc / back to galaxy
       </button>
 
       <div className="absolute bottom-6 inset-x-0 text-center font-mono-jb text-[10px] tracking-[0.3em] text-white/25 uppercase pointer-events-none z-30">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import NetworkHero from './NetworkHero';
+import GalaxyHero from './GalaxyHero';
 import SpaceField from './SpaceField';
 
 export default function App() {
@@ -8,7 +8,7 @@ export default function App() {
   return (
     <div className="absolute inset-0 bg-[#000000] overflow-hidden">
       {scene === 'hero' ? (
-        <NetworkHero onOpen={() => setScene('system')} />
+        <GalaxyHero onOpen={() => setScene('system')} />
       ) : (
         <SpaceField onExit={() => setScene('hero')} />
       )}
