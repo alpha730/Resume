@@ -567,3 +567,257 @@ export function renderGrain(size: number, seed: number): HTMLCanvasElement {
   ctx.putImageData(img, 0, 0);
   return canvas;
 }
+
+/**
+ * Crinkled gold multi-layer insulation — the foil that wraps real spacecraft.
+ *
+ * The crinkle is what sells it: flat gold reads as plastic, while ridged foil
+ * scatters light into small sharp highlights.
+ */
+function foilTexture(size: number, seed: number): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(size, size);
+  const broad = makeFbm(seed, 4, 32);
+  const crinkle = makeFbm(seed + 313, 4, 64);
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      const base = broad(u * 4, v * 4);
+      // Ridged noise: sharp creases where the foil folds.
+      const ridge = 1 - Math.abs(crinkle(u * 14, v * 14) - 0.5) * 2;
+      const crease = Math.pow(ridge, 6);
+      const t = Math.min(1, Math.max(0, base * 0.7 + crease * 0.55));
+      let [r, g, b] = ramp(
+        [
+          [0.0, [92, 60, 18]],
+          [0.35, [168, 118, 38]],
+          [0.65, [214, 168, 72]],
+          [0.88, [246, 214, 132]],
+          [1.0, [255, 244, 206]],
+        ],
+        t,
+      );
+      // Specular sparkle on the highest creases.
+      if (crease > 0.72) [r, g, b] = mix([r, g, b], [255, 250, 232], Math.min(1, (crease - 0.72) * 2.4));
+      const i = (y * size + x) * 4;
+      img.data[i] = r;
+      img.data[i + 1] = g;
+      img.data[i + 2] = b;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
+}
+
+/**
+ * A communications satellite: foil-wrapped bus, two long hinged solar wings,
+ * a high-gain dish, and a scatter of instruments.
+ *
+ * Drawn diagonally like a photographed spacecraft, with the faces of the bus
+ * shaded by which way they point relative to the scene's light.
+ */
+export function renderSatellite(size: number, seed: number): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const u = size / 100;
+  const foil = foilTexture(96, seed);
+  const foilPattern = ctx.createPattern(foil, 'repeat')!;
+
+  ctx.translate(size / 2, size / 2);
+  ctx.rotate(-0.58);
+
+  // ---- solar wings: three hinged panels each, blue-black cells in a frame
+  const wing = (dir: 1 | -1) => {
+    const panelW = 12 * u;
+    const panelH = 15 * u;
+    const gap = 0.9 * u;
+    const start = 13 * u;
+    for (let p = 0; p < 3; p++) {
+      const x0 = dir === 1 ? start + p * (panelW + gap) : -start - (p + 1) * panelW - p * gap;
+      const y0 = -panelH / 2;
+
+      // Base: deep blue with a broad reflection band, as arrays mirror the sky.
+      const g = ctx.createLinearGradient(x0, y0, x0 + panelW, y0 + panelH);
+      g.addColorStop(0, '#060c1e');
+      g.addColorStop(0.4, '#142c5c');
+      g.addColorStop(0.52, '#2a4c8c');
+      g.addColorStop(0.64, '#11244a');
+      g.addColorStop(1, '#050a18');
+      ctx.fillStyle = g;
+      ctx.fillRect(x0, y0, panelW, panelH);
+
+      // Cell grid.
+      ctx.strokeStyle = 'rgba(150, 180, 230, 0.32)';
+      ctx.lineWidth = Math.max(0.5, u * 0.14);
+      ctx.beginPath();
+      const cols = 6;
+      const rows = 8;
+      for (let c = 1; c < cols; c++) {
+        const x = x0 + (panelW / cols) * c;
+        ctx.moveTo(x, y0);
+        ctx.lineTo(x, y0 + panelH);
+      }
+      for (let r = 1; r < rows; r++) {
+        const y = y0 + (panelH / rows) * r;
+        ctx.moveTo(x0, y);
+        ctx.lineTo(x0 + panelW, y);
+      }
+      ctx.stroke();
+
+      // Silver frame.
+      ctx.strokeStyle = 'rgba(205, 214, 228, 0.85)';
+      ctx.lineWidth = Math.max(0.7, u * 0.35);
+      ctx.strokeRect(x0, y0, panelW, panelH);
+
+      // Hinge between panels.
+      if (p > 0) {
+        const hx = dir === 1 ? x0 - gap / 2 : x0 + panelW + gap / 2;
+        ctx.fillStyle = '#9aa6b8';
+        ctx.fillRect(hx - gap / 2, -1.2 * u, gap, 2.4 * u);
+      }
+    }
+    // One sharp specular glint across the wing nearest the light.
+    if (dir === -1) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const gx = -start - panelW * 1.3;
+      const glint = ctx.createRadialGradient(gx, -panelH * 0.2, 0, gx, -panelH * 0.2, panelW * 0.9);
+      glint.addColorStop(0, 'rgba(190, 220, 255, 0.45)');
+      glint.addColorStop(1, 'rgba(190, 220, 255, 0)');
+      ctx.fillStyle = glint;
+      ctx.fillRect(gx - panelW, -panelH, panelW * 2, panelH * 2);
+      ctx.restore();
+    }
+  };
+  wing(-1);
+  wing(1);
+
+  // ---- booms joining the wings to the bus
+  ctx.fillStyle = '#b8c2d0';
+  ctx.fillRect(-13 * u, -0.7 * u, 5.5 * u, 1.4 * u);
+  ctx.fillRect(7.5 * u, -0.7 * u, 5.5 * u, 1.4 * u);
+  ctx.fillStyle = '#5f6b7c';
+  ctx.fillRect(-13 * u, 0.2 * u, 5.5 * u, 0.5 * u);
+  ctx.fillRect(7.5 * u, 0.2 * u, 5.5 * u, 0.5 * u);
+
+  // ---- the bus: a box seen from above and to one side
+  const bw = 15 * u;
+  const bh = 17 * u;
+  const d = 5 * u; // depth offset of the receding faces
+  const fx = -bw / 2;
+  const fy = -bh / 2 + 1.5 * u;
+
+  const face = (pts: [number, number][], shade: string) => {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (const [x, y] of pts.slice(1)) ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.fillStyle = foilPattern;
+    ctx.fill();
+    ctx.fillStyle = shade;
+    ctx.fill();
+  };
+
+  // Top face catches the light, the side falls into shadow.
+  face(
+    [
+      [fx, fy],
+      [fx + d, fy - d],
+      [fx + bw + d, fy - d],
+      [fx + bw, fy],
+    ],
+    'rgba(255, 244, 214, 0.22)',
+  );
+  face(
+    [
+      [fx + bw, fy],
+      [fx + bw + d, fy - d],
+      [fx + bw + d, fy + bh - d],
+      [fx + bw, fy + bh],
+    ],
+    'rgba(10, 6, 2, 0.58)',
+  );
+  face(
+    [
+      [fx, fy],
+      [fx + bw, fy],
+      [fx + bw, fy + bh],
+      [fx, fy + bh],
+    ],
+    'rgba(0, 0, 0, 0.12)',
+  );
+
+  // Silver radiator panel on the front face.
+  const rad = ctx.createLinearGradient(fx, fy, fx + bw, fy + bh);
+  rad.addColorStop(0, 'rgba(236, 240, 246, 0.9)');
+  rad.addColorStop(1, 'rgba(120, 130, 146, 0.9)');
+  ctx.fillStyle = rad;
+  ctx.fillRect(fx + 2 * u, fy + bh * 0.58, bw - 4 * u, bh * 0.3);
+  ctx.strokeStyle = 'rgba(60, 68, 82, 0.6)';
+  ctx.lineWidth = Math.max(0.5, u * 0.15);
+  for (let i = 1; i < 5; i++) {
+    const x = fx + 2 * u + ((bw - 4 * u) / 5) * i;
+    ctx.beginPath();
+    ctx.moveTo(x, fy + bh * 0.58);
+    ctx.lineTo(x, fy + bh * 0.88);
+    ctx.stroke();
+  }
+
+  // Edge highlights on the lit edges only.
+  ctx.strokeStyle = 'rgba(255, 238, 196, 0.7)';
+  ctx.lineWidth = Math.max(0.6, u * 0.28);
+  ctx.beginPath();
+  ctx.moveTo(fx, fy + bh);
+  ctx.lineTo(fx, fy);
+  ctx.lineTo(fx + d, fy - d);
+  ctx.lineTo(fx + bw + d, fy - d);
+  ctx.stroke();
+
+  // ---- high-gain dish on top
+  const dishX = fx + bw * 0.5 + d * 0.5;
+  const dishY = fy - d - 4.5 * u;
+  ctx.fillStyle = '#9aa4b2';
+  ctx.fillRect(dishX - 0.5 * u, dishY, 1 * u, 4.8 * u);
+  const dish = ctx.createRadialGradient(dishX - 2 * u, dishY - 1.5 * u, 0.5 * u, dishX, dishY, 7 * u);
+  dish.addColorStop(0, '#ffffff');
+  dish.addColorStop(0.45, '#d6dbe3');
+  dish.addColorStop(1, '#6b7482');
+  ctx.fillStyle = dish;
+  ctx.beginPath();
+  ctx.ellipse(dishX, dishY, 7 * u, 3.2 * u, -0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(60, 66, 78, 0.7)';
+  ctx.lineWidth = Math.max(0.5, u * 0.2);
+  ctx.stroke();
+  // Feed horn at the focus.
+  ctx.fillStyle = '#e6e9ee';
+  ctx.beginPath();
+  ctx.arc(dishX, dishY - 0.4 * u, 0.9 * u, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- small instruments on the lower face
+  ctx.fillStyle = '#20252e';
+  ctx.beginPath();
+  ctx.arc(fx + 4 * u, fy + bh + 1.4 * u, 1.6 * u, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(120, 190, 255, 0.8)';
+  ctx.beginPath();
+  ctx.arc(fx + 3.5 * u, fy + bh + 0.9 * u, 0.5 * u, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#c7ced8';
+  ctx.fillRect(fx + bw - 5 * u, fy + bh, 2.2 * u, 3 * u);
+  ctx.fillStyle = '#ff5140';
+  ctx.beginPath();
+  ctx.arc(fx + bw + d * 0.6, fy - d * 0.6 + 2 * u, 0.5 * u, 0, Math.PI * 2);
+  ctx.fill();
+
+  return canvas;
+}

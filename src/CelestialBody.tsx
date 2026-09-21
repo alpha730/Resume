@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { renderPlanet, renderAsteroid, prng, type PlanetOptions } from './spaceRender';
+import { renderPlanet, renderAsteroid, renderSatellite, prng, type PlanetOptions } from './spaceRender';
 
 /**
  * The seven bodies that stand in for the resume sections.
@@ -47,6 +47,9 @@ function buildBody(kind: BodyKind, size: number, seed: number): HTMLCanvasElemen
 
     case 'terranPlanet':
       return planet({ type: 'terran', seed, fill: 0.82, atmosphere: [48, 108, 196], ambient: 0.05 });
+
+    case 'station':
+      return renderSatellite(s, seed);
 
     default:
       return null; // composed from several pieces below
@@ -144,56 +147,6 @@ export default function CelestialBody({ kind, uid, size }: Props) {
         <path d="M68 34 Q44 50 14 78 Q46 54 68 43 Z" fill={`url(#${id}-tail)`} opacity="0.6" />
         <circle cx="70" cy="32" r="26" fill={`url(#${id}-coma)`} />
         <circle cx="70" cy="32" r="7.5" fill={`url(#${id}-nuc)`} />
-      </svg>
-    );
-  }
-
-  if (kind === 'station') {
-    // Hardware, not geology: brushed metal, a cell grid on the arrays, and a
-    // shaded side so it sits in the same light as everything else.
-    const id = `st-${uid}`;
-    const cells = [];
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 3; j++) {
-        cells.push(<rect key={`l${i}${j}`} x={5 + i * 6.2} y={43 + j * 5} width="5" height="4" fill="#0d1c38" />);
-        cells.push(<rect key={`r${i}${j}`} x={71 + i * 6.2} y={43 + j * 5} width="5" height="4" fill="#0d1c38" />);
-      }
-    }
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ overflow: 'visible', display: 'block' }}
-      >
-        <defs>
-          <linearGradient id={`${id}-metal`} x1="10%" y1="0%" x2="90%" y2="100%">
-            <stop offset="0%" stopColor="#f2f5fa" />
-            <stop offset="28%" stopColor="#b9c3d2" />
-            <stop offset="55%" stopColor="#6b7686" />
-            <stop offset="100%" stopColor="#222a36" />
-          </linearGradient>
-          <linearGradient id={`${id}-panel`} x1="0%" y1="0%" x2="100%" y2="20%">
-            <stop offset="0%" stopColor="#2b5da8" />
-            <stop offset="45%" stopColor="#15315e" />
-            <stop offset="100%" stopColor="#0a1930" />
-          </linearGradient>
-        </defs>
-        <rect x="3" y="41" width="27" height="18" rx="1" fill={`url(#${id}-panel)`} />
-        <rect x="69" y="41" width="27" height="18" rx="1" fill={`url(#${id}-panel)`} />
-        {cells}
-        <rect x="3" y="41" width="27" height="18" rx="1" fill="none" stroke="#7f8ea6" strokeWidth="0.6" />
-        <rect x="69" y="41" width="27" height="18" rx="1" fill="none" stroke="#7f8ea6" strokeWidth="0.6" />
-        <rect x="30" y="49" width="10" height="2.4" fill="#9aa7bb" />
-        <rect x="60" y="49" width="10" height="2.4" fill="#9aa7bb" />
-        <rect x="40" y="33" width="20" height="34" rx="7" fill={`url(#${id}-metal)`} />
-        <rect x="44" y="25" width="12" height="10" rx="3" fill={`url(#${id}-metal)`} />
-        <rect x="40" y="33" width="20" height="34" rx="7" fill="none" stroke="#0a0e15" strokeOpacity="0.5" strokeWidth="0.6" />
-        <circle cx="50" cy="45" r="3.2" fill="#0a1018" />
-        <circle cx="50" cy="55" r="3.2" fill="#0a1018" />
-        <circle cx="48.8" cy="43.8" r="1.1" fill="#9fd0ff" opacity="0.7" />
-        <circle cx="50" cy="29" r="1.6" fill="#ff4a3d" />
       </svg>
     );
   }

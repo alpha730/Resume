@@ -44,7 +44,7 @@ const PLACEMENTS: Placement[] = [
   { kind: 'asteroidCluster', x: 34, y: 66, size: 146, depth: 0.8, speed: 0.11, phase: 4.6, spin: -4, mobile: { x: 36, y: 62 } },
   { kind: 'comet', x: 12, y: 71, size: 122, depth: 1.3, speed: 0.19, phase: 2.3, spin: 0, mobile: { x: 34, y: 82 } },
   { kind: 'terranPlanet', x: 67, y: 74, size: 130, depth: 0.55, speed: 0.12, phase: 5.4, spin: 0, mobile: { x: 72, y: 72 } },
-  { kind: 'station', x: 46, y: 41, size: 96, depth: 1.45, speed: 0.22, phase: 0.9, spin: 6, mobile: { x: 30, y: 45 } },
+  { kind: 'station', x: 46, y: 41, size: 150, depth: 1.45, speed: 0.22, phase: 0.9, spin: 0, mobile: { x: 30, y: 45 } },
 ];
 
 interface SpaceFieldProps {
@@ -60,6 +60,8 @@ export default function SpaceField({ onExit }: SpaceFieldProps) {
   const lastFocused = useRef<number>(0);
 
   const driftRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Spin goes on the body alone — on the drift layer it turned the labels too.
+  const spinRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mouse = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
   const frame = useRef<number>(0);
 
@@ -112,9 +114,10 @@ export default function SpaceField({ onExit }: SpaceFieldProps) {
         const driftY = Math.cos(t * p.speed * 0.83 + p.phase) * 12;
         const parX = -mouse.current.x * 26 * p.depth;
         const parY = -mouse.current.y * 18 * p.depth;
-        const spin = p.spin ? ` rotate(${(t * p.spin) % 360}deg)` : '';
+        el.style.transform = `translate(${(driftX + parX).toFixed(2)}px, ${(driftY + parY).toFixed(2)}px)`;
 
-        el.style.transform = `translate(${(driftX + parX).toFixed(2)}px, ${(driftY + parY).toFixed(2)}px)${spin}`;
+        const spinEl = spinRefs.current[i];
+        if (spinEl && p.spin) spinEl.style.transform = `rotate(${(t * p.spin) % 360}deg)`;
       }
 
       frame.current = requestAnimationFrame(tick);
@@ -207,7 +210,13 @@ export default function SpaceField({ onExit }: SpaceFieldProps) {
                         : 'drop-shadow(0 0 10px rgba(0,0,0,0.6))',
                   }}
                 >
-                  <CelestialBody kind={p.kind} uid={section.id} size={size} />
+                  <div
+                    ref={(el) => {
+                      spinRefs.current[i] = el;
+                    }}
+                  >
+                    <CelestialBody kind={p.kind} uid={section.id} size={size} />
+                  </div>
                 </div>
 
                 <div
