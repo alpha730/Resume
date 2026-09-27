@@ -60,7 +60,7 @@ export const SECTIONS: Section[] = [
     lines: ['Python · Java · React.js · Node.js', 'RAG · LangChain · LangGraph', 'Agentic AI · Vector Databases'],
     detail: [
       { heading: 'PROGRAMMING', lines: ['Python, Java'] },
-      { heading: 'WEB DEVELOPMENT (VIBE CODING)', lines: ['HTML, CSS, React.js, Node.js'] },
+      { heading: 'WEB DEVELOPMENT', lines: ['HTML, CSS, React.js, Node.js'] },
       { heading: 'AI / MACHINE LEARNING', lines: ['Machine Learning, Prompt Engineering'] },
       {
         heading: 'LLM & GENERATIVE AI',

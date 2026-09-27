@@ -93,7 +93,7 @@ const LX = LIGHT[0] / LIGHT_LEN;
 const LY = LIGHT[1] / LIGHT_LEN;
 const LZ = LIGHT[2] / LIGHT_LEN;
 
-export type PlanetType = 'gas' | 'ice' | 'rocky' | 'terran' | 'neptunian' | 'martian';
+export type PlanetType = 'gas' | 'rocky' | 'terran' | 'neptunian' | 'martian';
 
 export interface PlanetOptions {
   type: PlanetType;
@@ -115,13 +115,6 @@ const PALETTES: Record<PlanetType, [number, RGB][]> = {
     [0.68, [238, 218, 186]],
     [0.85, [201, 146, 92]],
     [1.0, [120, 70, 40]],
-  ],
-  // Enceladus-white with faint blue in the cracks.
-  ice: [
-    [0.0, [120, 158, 178]],
-    [0.4, [186, 214, 228]],
-    [0.72, [226, 240, 246]],
-    [1.0, [248, 252, 255]],
   ],
   // Lunar regolith: narrow value range, which is what makes it read as rock.
   rocky: [
@@ -213,11 +206,6 @@ export function renderPlanet(size: number, opts: PlanetOptions): HTMLCanvasEleme
         const warp = fbm(lon * 1.2, lat * 1.8) - 0.5;
         const bands = Math.sin(lat * 6.0 + warp * 2.6);
         return Math.min(1, Math.max(0, 0.52 + bands * 0.22 + (detail(lon * 3, lat * 4) - 0.5) * 0.26));
-      }
-      case 'ice': {
-        const v = fbm(lon * 2.4, lat * 2.4);
-        const cracks = Math.abs(detail(lon * 5, lat * 5) - 0.5) * 2;
-        return Math.min(1, Math.max(0, v * 0.55 + 0.45 - Math.pow(1 - cracks, 8) * 0.5));
       }
       case 'terran': {
         // Continents from ridged noise; the 0.5 stop in the ramp is sea level.
