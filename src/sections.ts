@@ -10,7 +10,7 @@ export interface Section {
   id: string;
   title: string;
   subtitle: string;
-  lines: string[]; // short teaser on the card back
+  lines: string[]; // short teaser shown under the body
   detail: DetailBlock[]; // full resume content shown in the detail panel
 }
 
@@ -20,20 +20,19 @@ export const SECTIONS: Section[] = [
     id: '01',
     title: 'ABOUT',
     subtitle: 'ARYAN KUMAR',
-    lines: ['Aspiring AI & Data Science dev', 'B.Tech AI & DS (JECRC, Jaipur)', 'ML apps · RAG · agentic AI'],
+    lines: ['B.Tech AI & DS · CGPA 8.3', 'Agentic AI · RAG · geospatial', 'JECRC Foundation, Jaipur'],
     detail: [
       {
         heading: 'ARYAN KUMAR',
         lines: [
-          'Aspiring AI and Data Science developer currently pursuing a B.Tech in Artificial Intelligence & Data Science.',
-          'Passionate about building machine learning applications, AI-powered tools, and agentic AI systems.',
-          'Experienced in developing web applications, machine learning models, RAG-based solutions, and interactive dashboards using modern technologies.',
-          'Currently focused on building real-world AI applications and intelligent agentic systems.',
+          'B.Tech student in Artificial Intelligence & Data Science at JECRC Foundation, Jaipur.',
+          'Builds agentic AI systems: retrieval-augmented generation, LLM-driven structured extraction, and computer vision over satellite imagery.',
+          'Works across Python and TypeScript, from PyTorch models to Next.js front ends.',
         ],
       },
       {
-        heading: 'LANGUAGES',
-        lines: ['English — Professional Proficiency', 'Hindi — Native Proficiency'],
+        heading: 'SPOKEN LANGUAGES',
+        lines: ['English — Professional', 'Hindi — Native'],
       },
     ],
   },
@@ -41,11 +40,15 @@ export const SECTIONS: Section[] = [
     id: '02',
     title: 'EDUCATION',
     subtitle: 'WHERE I STUDIED',
-    lines: ['B.Tech — AI & Data Science', 'JECRC Foundation · 2025–2029', "ISC — St. Xavier's · 2024"],
+    lines: ['B.Tech — AI & Data Science', 'CGPA 8.3/10 · 2025–2029', "ISC — St. Xavier's · 2024"],
     detail: [
       {
         heading: 'B.TECH — ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
-        lines: ['Jaipur Engineering College and Research Centre Foundation, Jaipur', '2025 – 2029'],
+        lines: [
+          'Jaipur Engineering College and Research Centre Foundation, Jaipur, India',
+          'CGPA: 8.3/10',
+          '2025 – 2029 (expected)',
+        ],
       },
       {
         heading: 'ISC (CLASS XII)',
@@ -57,51 +60,42 @@ export const SECTIONS: Section[] = [
     id: '03',
     title: 'SKILLS',
     subtitle: 'WHAT I USE',
-    lines: ['Python · Java · React.js · Node.js', 'RAG · LangChain · LangGraph', 'Agentic AI · Vector Databases'],
+    lines: ['Python · Java · PyTorch', 'LangGraph · LangChain · CrewAI', 'Rasterio/GDAL · React · Next.js'],
     detail: [
-      { heading: 'PROGRAMMING', lines: ['Python, Java'] },
-      { heading: 'WEB DEVELOPMENT', lines: ['HTML, CSS, React.js, Node.js'] },
-      { heading: 'AI / MACHINE LEARNING', lines: ['Machine Learning, Prompt Engineering'] },
+      { heading: 'LANGUAGES', lines: ['Python, Java'] },
+      { heading: 'ML / DL', lines: ['PyTorch, scikit-learn'] },
       {
-        heading: 'LLM & GENERATIVE AI',
-        lines: ['LLM Application, Generative AI Development, Multimodal Prompting'],
+        heading: 'LLMS & AGENTS',
+        lines: ['LangGraph, LangChain, CrewAI, RAG, vector databases'],
       },
       {
-        heading: 'RAG & RETRIEVAL',
-        lines: ['Retrieval-Augmented Generation (RAG), Advanced RAG, Vector Databases'],
+        heading: 'GEOSPATIAL',
+        lines: ['Rasterio/GDAL, GeoPandas, Sentinel-1/2 data, STAC'],
       },
-      {
-        heading: 'AGENTIC AI',
-        lines: ['Agentic Systems, Generative AI Agents, LangGraph, LangChain, CrewAI'],
-      },
-      { heading: 'TOOLS & PLATFORMS', lines: ['Git, GitHub, Vercel, Render, N8N'] },
+      { heading: 'WEB', lines: ['React, Node.js, Next.js, TypeScript'] },
+      { heading: 'TOOLS', lines: ['Git, Supabase, Vercel, Render, n8n'] },
     ],
   },
   {
     id: '04',
     title: 'PROJECTS',
     subtitle: 'WHAT I BUILT',
-    lines: ['AI Chatbot for Ocean Data', 'AI Voice Agent for Health Workers', 'Remote Sensing Analysis Platform'],
+    lines: ['Remote Sensing Analysis Platform', 'AI Voice Agent for Health Workers', 'Agentic AI · RAG · VQA'],
     detail: [
       {
-        heading: 'AI CHATBOT FOR OCEAN DATA',
+        heading: 'AI-POWERED REMOTE SENSING ANALYSIS PLATFORM',
         lines: [
-          'Built an AI-powered chatbot that retrieves Argo float oceanographic data using vector search and semantic retrieval.',
-          'Tech stack: Node.js, Pinecone, Gemini AI, PostgreSQL, RAG, LangChain',
+          'Built an agentic system for Earth-observation tasks on multi-modal satellite imagery (SAR and multispectral), including visual question answering (VQA).',
+          'Combined RAG, LLMs, PyTorch computer-vision models and geospatial processing (Rasterio/GDAL, GeoPandas).',
+          'Tech stack: Python, PyTorch, LangChain, Rasterio/GDAL',
         ],
       },
       {
         heading: 'AI VOICE AGENT FOR COMMUNITY HEALTH WORKERS',
         lines: [
-          'Built a multilingual voice agent that lets frontline health workers log home visits by speaking naturally in Hindi or English, converting free-form speech into structured medical records in real time and prompting for missing fields through a conversational follow-up loop.',
-          'Tech stack: Next.js, TypeScript, AssemblyAI Streaming Speech-to-Text, LLM-based structured extraction, Supabase, PostgreSQL',
-        ],
-      },
-      {
-        heading: 'AI-POWERED REMOTE SENSING ANALYSIS PLATFORM',
-        lines: [
-          'Built an agentic AI system for analyzing multi-modal satellite imagery using RAG, computer vision, geospatial processing, and VQA to support intelligent Earth-observation tasks.',
-          'Tech stack: Python, PyTorch, LangChain, RAG, Rasterio/GDAL, GeoPandas, SAR & multispectral imagery, LLMs, Computer Vision',
+          'Built a multilingual voice agent that lets frontline health workers log home visits by speaking in Hindi or English, turning free-form speech into structured medical records in real time.',
+          'Used AssemblyAI streaming speech-to-text and LLM-based structured extraction, with a conversational follow-up loop that asks for missing fields; records stored in Supabase (PostgreSQL).',
+          'Tech stack: Next.js, TypeScript, AssemblyAI, Supabase',
         ],
       },
     ],
@@ -110,13 +104,11 @@ export const SECTIONS: Section[] = [
     id: '05',
     title: 'CERTIFICATIONS',
     subtitle: 'WHAT I EARNED',
-    lines: ['IBM RAG and Agentic AI', 'Professional Certificate', 'Retrieval · Agents · LLM apps'],
+    lines: ['IBM RAG and Agentic AI', 'Professional Certificate', 'Coursera'],
     detail: [
       {
         heading: 'IBM RAG AND AGENTIC AI PROFESSIONAL CERTIFICATE',
-        lines: [
-          'Professional certificate covering retrieval-augmented generation, vector search, and the design of generative AI agents.',
-        ],
+        lines: ['Coursera'],
       },
     ],
   },
@@ -124,19 +116,18 @@ export const SECTIONS: Section[] = [
     id: '06',
     title: 'EXPERIENCE',
     subtitle: 'WHERE I WORKED',
-    lines: ['AI Engineer — AI service company', 'Social media — Aashayien (JECRC)', 'Content writing & strategy'],
+    lines: ['AI Engineer — Qualfocus', 'Apr 2026 – Jun 2026', 'Aashayien — social media team'],
     detail: [
       {
-        heading: 'AI ENGINEER — AI SERVICE COMPANY',
+        heading: 'QUALFOCUS — AI ENGINEER',
         lines: [
-          'Worked in an AI service delivering company as an AI engineer; worked on an application to make interior designing a new perspective — from the real world to the virtual world.',
+          'Apr 2026 – Jun 2026',
+          'Worked on an interior-design visualization app that brings real-world spaces into a virtual environment.',
         ],
       },
       {
-        heading: 'SOCIAL MEDIA — AASHAYIEN CLUB (JECRC FOUNDATION)',
-        lines: [
-          'Have been a prominent member of the social media team in the role of content writer, with content strategy and planning.',
-        ],
+        heading: 'AASHAYIEN (JECRC CLUB) — SOCIAL MEDIA TEAM',
+        lines: ['Oct 2025 – Aug 2026', 'Content writing and planning.'],
       },
     ],
   },
